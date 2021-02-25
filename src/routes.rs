@@ -30,7 +30,23 @@ struct GetData {
 
 #[derive(Serialize)]
 struct UpdateData {
+    exist: bool,
+    init: bool,
     updated_count: i64,
+}
+
+#[derive(Serialize)]
+struct InitData {
+    exist: bool,
+}
+
+fn gen_std_json_response<T: Serialize>(data: Option<T>) -> impl Responder {
+    HttpResponse::Ok()
+        .content_type("application/json")
+        .json(STDJSONResponse {
+            success: data.is_some(),
+            data,
+        })
 }
 
 #[get("/new")]
@@ -43,23 +59,41 @@ pub async fn new_prod(app_state: web::Data<AppState>) -> impl Responder {
 
     match app_state
         .profile
-        .create(doc! {"uuid":&uuid,"init":false})
+        .create(doc! {"uuid":&uuid,"init":false,"delete":false})
         .await
     {
-        Ok(_) => HttpResponse::Created()
-            .content_type("application/json")
-            .json(STDJSONResponse {
-                success: true,
-                data: Some(CreateData { uuid: uuid }),
-            }),
+        Ok(_) => gen_std_json_response(Some(CreateData { uuid: uuid })),
         Err(err) => {
             println!("Err:{:?}", err);
-            HttpResponse::InternalServerError()
-                .content_type("application/json")
-                .json(STDJSONResponse::<CreateData> {
-                    success: false,
-                    data: None,
-                })
+            gen_std_json_response(None)
+        }
+    }
+}
+
+#[get("/init/{uuid}")]
+pub async fn init_prod(
+    app_state: web::Data<AppState>,
+    web::Path(uuid): web::Path<String>,
+) -> impl Responder {
+    // TODO: uuid验证（可能的查询字符串注入？）
+    match app_state.profile.get(doc! {"uuid":&uuid}).await {
+        Ok(result) => match result {
+            Some(_) => gen_std_json_response(Some(InitData { exist: true })),
+            None => match app_state
+                .profile
+                .create(doc! {"uuid":&uuid,"init":false})
+                .await
+            {
+                Ok(_) => gen_std_json_response(Some(InitData { exist: false })),
+                Err(err) => {
+                    println!("Err:{:?}", err);
+                    gen_std_json_response(None)
+                }
+            },
+        },
+        Err(err) => {
+            println!("Err:{:?}", err);
+            gen_std_json_response(None)
         }
     }
 }
@@ -69,49 +103,33 @@ pub async fn fetch(
     app_state: web::Data<AppState>,
     web::Path(uuid): web::Path<String>,
 ) -> impl Responder {
-    match app_state.profile.get(doc! {"uuid":uuid}).await {
+    // TODO: uuid验证（可能的查询字符串注入？）
+    match app_state.profile.get(doc! {"uuid":&uuid}).await {
         Ok(result) => {
             match result {
                 // TODO: 错误处理
                 Some(inner) => {
                     let init = inner.get("init").and_then(Bson::as_bool).unwrap();
-                    return HttpResponse::Ok().content_type("application/json").json(
-                        STDJSONResponse {
-                            success: true,
-                            data: Some(GetData {
-                                exist: true,
-                                init: inner.get("init").and_then(Bson::as_bool).unwrap(),
-                                profile: if init {
-                                    Some(bson::from_bson(Bson::Document(inner.clone())).unwrap())
-                                } else {
-                                    None
-                                },
-                            }),
+                    return gen_std_json_response(Some(GetData {
+                        exist: true,
+                        init: inner.get("init").and_then(Bson::as_bool).unwrap(),
+                        profile: if init {
+                            Some(bson::from_bson(Bson::Document(inner.clone())).unwrap())
+                        } else {
+                            None
                         },
-                    );
+                    }));
                 }
-                None => {
-                    return HttpResponse::Ok().content_type("application/json").json(
-                        STDJSONResponse {
-                            success: true,
-                            data: Some(GetData {
-                                exist: false,
-                                init: false,
-                                profile: None,
-                            }),
-                        },
-                    )
-                }
+                None => gen_std_json_response(Some(GetData {
+                    exist: false,
+                    init: false,
+                    profile: None,
+                })),
             }
         }
         Err(err) => {
             println!("Err:{:?}", err);
-            return HttpResponse::InternalServerError()
-                .content_type("application/json")
-                .json(STDJSONResponse::<GetData> {
-                    success: false,
-                    data: None,
-                });
+            return gen_std_json_response(None);
         }
     }
 }
@@ -121,68 +139,45 @@ pub async fn submit(
     app_state: web::Data<AppState>,
     form_data: web::Json<Profile>,
 ) -> impl Responder {
+    // TODO: uuid验证（可能的查询字符串注入？）
     let parsed_data = form_data.deref();
     let uuid = &parsed_data.uuid;
-    let query = app_state.profile.get(doc! {"uuid":uuid}).await;
-    match query {
+    match app_state.profile.get(doc! {"uuid":&uuid}).await {
         Ok(result) => match result {
             Some(inner) => {
                 if inner.get("init").and_then(Bson::as_bool).unwrap() {
-                    HttpResponse::Ok()
-                        .content_type("application/json")
-                        .json(STDJSONResponse {
-                            success: true,
-                            data: Some(GetData {
-                                exist: true,
-                                init: true,
-                                profile: None,
-                            }),
-                        })
+                    gen_std_json_response(Some(UpdateData {
+                        exist: true,
+                        init: true,
+                        updated_count: 0,
+                    }))
                 } else {
                     match app_state
                         .profile
-                        .set(doc! {"uuid":uuid}, bson::to_document(parsed_data).unwrap())
+                        .set(doc! {"uuid":&uuid}, bson::to_document(parsed_data).unwrap())
                         .await
                     {
-                        Ok(result) => HttpResponse::Ok().content_type("application/json").json(
-                            STDJSONResponse {
-                                success: true,
-                                data: Some(UpdateData {
-                                    updated_count: result.modified_count,
-                                }),
-                            },
-                        ),
+                        Ok(result) => gen_std_json_response(Some(UpdateData {
+                            exist: true,
+                            init: false,
+                            updated_count: result.modified_count,
+                        })),
                         Err(err) => {
                             println!("Err:{:?}", err);
-                            return HttpResponse::InternalServerError()
-                                .content_type("application/json")
-                                .json(STDJSONResponse::<GetData> {
-                                    success: false,
-                                    data: None,
-                                });
+                            return gen_std_json_response(None);
                         }
                     }
                 }
             }
-            None => HttpResponse::Ok()
-                .content_type("application/json")
-                .json(STDJSONResponse {
-                    success: true,
-                    data: Some(GetData {
-                        exist: false,
-                        init: false,
-                        profile: None,
-                    }),
-                }),
+            None => gen_std_json_response(Some(UpdateData {
+                exist: false,
+                init: false,
+                updated_count: 0,
+            })),
         },
         Err(err) => {
             println!("Err:{:?}", err);
-            return HttpResponse::InternalServerError()
-                .content_type("application/json")
-                .json(STDJSONResponse::<GetData> {
-                    success: false,
-                    data: None,
-                });
+            return gen_std_json_response(None);
         }
     }
 }
