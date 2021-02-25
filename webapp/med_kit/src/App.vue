@@ -5,7 +5,7 @@
         <w-button class="ma1" text xl @click="showNav = !showNav">
           <w-icon class="maa">{{ menuIcon }}</w-icon>
         </w-button>
-        <p class="title2 mya ml3">测试系统</p>
+        <p class="title2 mya ml3">{{ $route.name }}</p>
       </w-flex>
     </header>
     <w-drawer
@@ -16,14 +16,9 @@
       width="160px"
     >
       <template #pushable>
-        <div class="w-flex column align-center justify-center pa6">
+        <div class="w-flex column align-center justify-center px4 pt2">
           <w-flex class="sm6 xs12 column">
-            <div class="row mb8">
-              <init-prod></init-prod>
-            </div>
-            <div class="row">
-              <fetch-profile uuid="1145141919"></fetch-profile>
-            </div>
+            <router-view></router-view>
           </w-flex>
         </div>
       </template>
@@ -48,18 +43,9 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import InitProd from "./components/InitProduct.vue";
-//TODO: remove this
-import SubmitProfile from "./components/SubmitProfile.vue";
-import FetchProfile from "./components/FetchProfile.vue";
 
 export default defineComponent({
   name: "App",
-  components: {
-    InitProd,
-    SubmitProfile,
-    FetchProfile,
-  },
   data() {
     return {
       showNav: false,
@@ -68,13 +54,13 @@ export default defineComponent({
           label: "标签打印",
           id: "label",
           icon: "mdi mdi-label-multiple",
-          route: "/new",
+          route: "/init",
         },
         {
           label: "信息登记",
           id: "info",
           icon: "mdi mdi-book-information-variant",
-          route: "/profile",
+          route: "/fetch/114",
         },
       ],
     };
@@ -87,7 +73,7 @@ export default defineComponent({
 });
 </script>
 
-<style scoped>
+<style>
 header {
   min-height: 50px;
   padding: 10px;

@@ -50,7 +50,7 @@ fn gen_std_json_response<T: Serialize>(data: Option<T>) -> impl Responder {
 }
 
 #[get("/new")]
-pub async fn new_prod(app_state: web::Data<AppState>) -> impl Responder {
+pub async fn new_product(app_state: web::Data<AppState>) -> impl Responder {
     let mut uuid = Local::now().format("%Y%m%d%H%M").to_string();
     uuid.push_str(&nanoid!(
         4,
@@ -71,7 +71,7 @@ pub async fn new_prod(app_state: web::Data<AppState>) -> impl Responder {
 }
 
 #[get("/init/{uuid}")]
-pub async fn init_prod(
+pub async fn init_product(
     app_state: web::Data<AppState>,
     web::Path(uuid): web::Path<String>,
 ) -> impl Responder {
@@ -99,7 +99,7 @@ pub async fn init_prod(
 }
 
 #[get("/fetch/{uuid}")]
-pub async fn fetch(
+pub async fn fetch_profile(
     app_state: web::Data<AppState>,
     web::Path(uuid): web::Path<String>,
 ) -> impl Responder {
@@ -135,7 +135,7 @@ pub async fn fetch(
 }
 
 #[post("/submit")]
-pub async fn submit(
+pub async fn submit_profile(
     app_state: web::Data<AppState>,
     form_data: web::Json<Profile>,
 ) -> impl Responder {

@@ -1,11 +1,11 @@
 <template>
   <w-alert bg-color="primary" color="white" class="px4">
-    正在{{ fetched ? "处理" : "获取" }}序列号为{{ uuid }}的产品
+    正在{{ fetched ? "处理" : "获取" }}序列号为{{ $route.params.uuid }}的产品
   </w-alert>
   <component
     v-if="fetched"
     :is="innerComponent"
-    v-bind="{ uuid: uuid, profile: profile }"
+    v-bind="{ uuid: $route.params.uuid, profile: profile }"
   ></component>
 </template>
 
@@ -19,7 +19,6 @@ import Profile from "../Profile";
 
 export default defineComponent({
   name: "FetchProfile",
-  props: ["uuid"],
   components: { SubmitProfile, ShowProfile },
   data() {
     return { fetched: false, innerComponent: "", profile: {} };
@@ -28,7 +27,7 @@ export default defineComponent({
     //TODO: 请求地址
     axios
       .get<STDJSONResponse<GetData<Profile>>>(
-        "http://localhost:1146/fetch/" + this.uuid
+        "http://localhost:1146/fetch/" + this.$route.params.uuid
       )
       .then((response) => {
         if (response.data.success) {

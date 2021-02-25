@@ -5,7 +5,7 @@ mod routes;
 use actix_cors::Cors;
 use actix_web::{App, HttpServer};
 use db::DBService;
-use routes::{fetch, init_prod, new_prod, submit};
+use routes::{fetch_profile, init_product, new_product, submit_profile};
 
 pub struct AppState {
     user: DBService,
@@ -29,10 +29,10 @@ async fn main() -> std::io::Result<()> {
                 user: user_service.clone(),
                 profile: profile_service.clone(),
             })
-            .service(new_prod)
-            .service(init_prod)
-            .service(fetch)
-            .service(submit)
+            .service(new_product)
+            .service(init_product)
+            .service(fetch_profile)
+            .service(submit_profile)
     })
     .bind(("0.0.0.0", 1146))?
     .run()
