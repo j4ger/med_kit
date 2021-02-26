@@ -9,7 +9,9 @@ export default class Profile {
   public address: string;
   public age: number;
   public email: string;
-  public hostpital: string;
+  public hospital: string;
+  public firstTime: boolean;
+  public profession: string;
 
   public constructor(
     uuid: string,
@@ -20,7 +22,9 @@ export default class Profile {
     address: string,
     age: number,
     email: string,
-    hostpital: string
+    hospital: string,
+    firstTime: boolean,
+    profession: string
   ) {
     this.uuid = uuid;
     this.name = name;
@@ -32,7 +36,9 @@ export default class Profile {
     this.address = address;
     this.age = age;
     this.email = email;
-    this.hostpital = hostpital;
+    this.hospital = hospital;
+    this.firstTime = firstTime;
+    this.profession = profession;
   }
 }
 
@@ -48,7 +54,9 @@ export function getDisplayName(key: string): string {
     address: "地址",
     age: "年龄",
     email: "电子邮件地址",
-    hostpital: "送检医院",
+    hospital: "送检医院",
+    firstTime: "是否首次送检",
+    profession: "职业",
   };
   return displayNameDictionary[key];
 }

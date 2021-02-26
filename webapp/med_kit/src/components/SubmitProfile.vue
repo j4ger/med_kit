@@ -1,42 +1,72 @@
 <template>
   <w-card title="用户信息">
     <w-form v-model="formValidate" @submit="submit">
-      <w-input
-        label="姓名"
-        :validators="[validators.required]"
-        v-model="name"
-        class="mb4"
-        >姓名<w-tag class="mt-1 pa0" color="error">必填</w-tag></w-input
-      >
-      <w-radios
-        v-model="gender"
-        :items="genderOptions"
-        :validators="[validators.required]"
-        class="mb4"
-        inline
-      ></w-radios>
-      <w-input
-        label="年龄"
-        v-model="age"
-        class="mb4"
-        :validators="[validators.age]"
-        >年龄<w-tag class="mt-1 pa0" color="error">必填</w-tag></w-input
-      >
-      <w-input
-        label="手机号码"
-        v-model="phone"
-        :validators="[validators.phone]"
-        class="mb4"
-        >年龄<w-tag class="mt-1 pa0" color="error">必填</w-tag></w-input
-      >
-      <w-input label="电子邮件地址" v-model="email" class="mb4"></w-input>
-      <address-picker v-model="address" class="mb4"></address-picker>
-      <w-flex>
-        <div id="dateInput" class="sm6 mr2">
+      <w-flex wrap grow>
+        <div class="xs12">
+          <w-input
+            label="姓名"
+            :validators="[validators.required]"
+            v-model="name"
+            class="mb4"
+            >姓名<w-tag class="mt-1 pa0" color="error">必填</w-tag></w-input
+          >
+        </div>
+        <div class="lg6 xs12 px1 wrap grow">
+          <w-radios
+            v-model="gender"
+            :items="genderOptions"
+            :validators="[validators.required]"
+            class="mb4 mr10"
+            inline
+          ></w-radios>
+          <w-checkbox label="首次送检" v-model="firstTime" class="mb4 ml10"
+            >首次送检</w-checkbox
+          >
+        </div>
+        <div class="lg6 xs12 px1">
+          <w-input
+            label="年龄"
+            v-model="age"
+            class="mb4"
+            :validators="[validators.age]"
+            >年龄<w-tag class="mt-1 pa0" color="error">必填</w-tag></w-input
+          >
+        </div>
+        <div class="lg6 xs12 px1">
+          <w-input
+            label="职业"
+            v-model="profession"
+            class="mb4"
+            :validators="[validators.required]"
+            >职业<w-tag class="mt-1 pa0" color="error">必填</w-tag></w-input
+          >
+        </div>
+        <div class="lg6 xs12 px1">
+          <w-input
+            label="手机号码"
+            v-model="phone"
+            :validators="[validators.phone]"
+            class="mb4"
+            >手机号码<w-tag class="mt-1 pa0" color="error">必填</w-tag></w-input
+          >
+        </div>
+        <div class="lg6 xs12 px1">
+          <w-input
+            label="电子邮件地址"
+            v-model="email"
+            :validators="[validators.email]"
+            class="mb4"
+          ></w-input>
+        </div>
+        <div class="xs12 px1">
+          <address-picker v-model="address" class="mb4"></address-picker>
+        </div>
+        <div class="lg6 xs12 px1" id="timeInputWrapper">
           <span id="timeInput" class="primary"
             >采样日期<w-tag class="mt-1 pa0" color="error">必填</w-tag></span
           >
           <vue-cal
+            id="dateInput"
             :time="false"
             active-view="month"
             :disable-views="['week', 'day']"
@@ -47,7 +77,7 @@
             @cell-click="selectedDate = $event"
           ></vue-cal>
         </div>
-        <div class="sm6 ml10">
+        <div class="lg6 xs12 px1">
           <w-select
             :items="
               [...Array(24).keys()].map((each) => {
@@ -60,12 +90,24 @@
             :validators="[validators.required]"
             >采样时间（小时）<w-tag class="mt-1 pa0" color="error">必填</w-tag>
           </w-select>
+          <div class="text-center mb4">
+            <span>{{ time }}</span>
+          </div>
         </div>
-      </w-flex>
+        <div class="xs12">
+          <w-input
+            label="送检医院"
+            :validators="[validators.required]"
+            v-model="hospital"
+            class="mb4"
+            >送检医院<w-tag class="mt-1 pa0" color="error">必填</w-tag></w-input
+          >
+        </div>
 
-      <w-flex class="basis-zero mt4">
-        <w-button type="submit" class="mx4">提交</w-button>
-        <w-button bg-color="warning" type="reset" class="mx4">重置</w-button>
+        <w-flex class="basis-zero mt4">
+          <w-button type="submit" class="mx4">提交</w-button>
+          <w-button bg-color="warning" type="reset" class="mx4">重置</w-button>
+        </w-flex>
       </w-flex>
     </w-form>
   </w-card>
@@ -113,6 +155,8 @@ export default defineComponent({
       age: null,
       email: "",
       hospital: "",
+      profession: "",
+      firstTime: true,
       validators: {
         required: (value: any) => !!value || "此项为必填！",
         phone: (value: any) =>
@@ -120,6 +164,12 @@ export default defineComponent({
         age: (value: any) =>
           /^(?:[1-9][0-9]?|1[01234][0-9]|150)$/.test(value) ||
           "请正确填写年龄！",
+        email: (value: any) =>
+          /^[A-Za-z0-9\u4e00-\u9fa5]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/.test(
+            value
+          ) ||
+          value == "" ||
+          "请正确填写邮箱（或留空）！",
       },
       formValidate: false,
       updateSuccess: false,
@@ -151,9 +201,11 @@ export default defineComponent({
               this.time,
               this.phone,
               this.address,
-              this.age,
+              parseInt(this.age),
               this.email,
-              this.hospital
+              this.hospital,
+              this.firstTime,
+              this.profession
             )
           )
           .then((response) => {
@@ -180,6 +232,9 @@ export default defineComponent({
 }
 #dateInput {
   max-width: 500px;
-  max-height: 500px;
+  height: 300px;
+}
+#timeInputWrapper {
+  height: 350px;
 }
 </style>

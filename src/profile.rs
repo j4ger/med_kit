@@ -1,4 +1,4 @@
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
 
 pub struct Profile {
     pub uuid: String,
@@ -12,4 +12,6 @@ pub struct Profile {
     pub age: i64,
     pub email: String,
     pub hospital: String,
+    pub firstTime: bool,
+    pub profession: String,
 }

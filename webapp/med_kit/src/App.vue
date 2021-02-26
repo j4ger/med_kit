@@ -17,7 +17,7 @@
     >
       <template #pushable>
         <div class="w-flex column align-center justify-center px4 pt2">
-          <w-flex class="sm6 xs12 column">
+          <w-flex class="lg6 xs12 column">
             <router-view></router-view>
           </w-flex>
         </div>

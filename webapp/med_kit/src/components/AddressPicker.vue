@@ -1,43 +1,49 @@
 <template>
-  <span id="title" class="primary"
-    >地址<w-tag class="mt-1 pa0" color="error">必填</w-tag></span
-  >
-  <w-flex wrap>
-    <div class="sm4 xs12 my2">
-      <w-select
-        :items="getSelectItems(100000)"
-        v-model="province"
-        @input="changeProvince"
-        :validators="[validators.required]"
-      ></w-select>
-    </div>
-    <div class="sm4 xs12 my2">
-      <w-select
-        :items="getSelectItems(province)"
-        v-model="city"
-        @input="changeCity"
-        v-if="province != null"
-        :validators="[validators.required]"
-      ></w-select>
-    </div>
-    <div class="sm4 xs12 my2">
-      <w-select
-        :items="getSelectItems(city)"
-        v-model="county"
-        @input="changeValue"
-        v-if="city != null"
-        :validators="[validators.required]"
-      ></w-select>
-    </div>
-    <div class="xs12">
-      <w-input
-        v-model="detail"
-        label="街道地址"
-        @input="changeValue"
-        v-if="province != null && city != null && county != null"
-        :validators="[validators.required]"
-        >街道地址<w-tag class="mt-1 pa0" color="error">必填</w-tag></w-input
+  <w-flex wrap grow>
+    <div class="row xs12">
+      <span id="title" class="primary"
+        >地址<w-tag class="mt-1 pa0" color="error">必填</w-tag></span
       >
+    </div>
+    <div class="row xs12">
+      <w-flex wrap>
+        <div class="lg4 xs12 my2">
+          <w-select
+            :items="getSelectItems(100000)"
+            v-model="province"
+            @input="changeProvince"
+            :validators="[validators.required]"
+          ></w-select>
+        </div>
+        <div class="lg4 xs12 my2">
+          <w-select
+            :items="getSelectItems(province)"
+            v-model="city"
+            @input="changeCity"
+            v-if="province != null"
+            :validators="[validators.required]"
+          ></w-select>
+        </div>
+        <div class="lg4 xs12 my2">
+          <w-select
+            :items="getSelectItems(city)"
+            v-model="county"
+            @input="changeValue"
+            v-if="city != null"
+            :validators="[validators.required]"
+          ></w-select>
+        </div>
+        <div class="xs12">
+          <w-input
+            v-model="detail"
+            label="街道地址"
+            @input="changeValue"
+            v-if="province != null && city != null && county != null"
+            :validators="[validators.required]"
+            >街道地址<w-tag class="mt-1 pa0" color="error">必填</w-tag></w-input
+          >
+        </div>
+      </w-flex>
     </div>
   </w-flex>
 </template>

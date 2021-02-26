@@ -1,6 +1,6 @@
 <template>
   <w-flex class="column align-center justify-center">
-    <w-flex class="column sm4 xs12">
+    <w-flex class="column lg4 xs12">
       <w-list :items="Object.entries(profile).length - 1" hover>
         <template #item="{ index }">
           <w-flex basis-zero class="row">
