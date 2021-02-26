@@ -38,7 +38,7 @@ async fn main() -> std::io::Result<()> {
             .service(fetch_profile)
             .service(submit_profile)
     })
-    .bind(("0.0.0.0", 1146))?
+    .bind(("0.0.0.0", 80))?
     .run()
     .await
 }
