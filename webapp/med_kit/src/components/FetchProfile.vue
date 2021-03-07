@@ -1,53 +1,120 @@
 <template>
-  <w-alert bg-color="primary" color="white" class="px4">
-    正在{{ fetched ? "处理" : "获取" }}序列号为{{ $route.params.uuid }}的产品
+  <w-flex class="pl4">
+    <w-input label="产品序列号" v-model="uuid" class="mb4">产品序列号</w-input>
+    <w-button type="submit" class="mx4" @click="submit">提交</w-button>
+  </w-flex>
+  <w-alert bg-color="primary" color="white" class="px4" v-show="uuidValid">
+    正在{{ fetched ? "处理" : "获取" }}序列号为{{ uuid }}的产品
   </w-alert>
   <component
     v-if="fetched"
     :is="innerComponent"
-    v-bind="{ uuid: $route.params.uuid, profile: profile }"
+    v-bind="{ uuid: uuid }"
+    ref="innerComponentRef"
   ></component>
+  <w-notification
+    v-model="showNotification"
+    warning
+    timeout="0"
+    plain
+    round
+    shadow
+    bottom
+    center
+    transition="slide-fade-up"
+  >
+    {{ notificationContent
+    }}<w-button text @click="showNotification = false">
+      <w-icon class="maa">mdi mdi-close-circle</w-icon>
+    </w-button>
+  </w-notification>
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, Ref, ref } from "vue";
 import axios from "axios";
 import SubmitProfile from "./SubmitProfile.vue";
 import ShowProfile from "./ShowProfile.vue";
-import { STDJSONResponse, GetData } from "../Response";
+import { STDJSONResponse, QueryData } from "../Response";
 import Profile from "../Profile";
 
 export default defineComponent({
   name: "FetchProfile",
   components: { SubmitProfile, ShowProfile },
   data() {
-    return { fetched: false, innerComponent: "", profile: {} };
+    return {
+      fetched: false,
+      innerComponent: "",
+      showNotification: false,
+      notificationContent: "",
+      uuidValid: false,
+      uuid: "",
+    };
+  },
+  setup() {
+    let innerComponentRef = ref(null);
+    return { innerComponentRef };
+  },
+  methods: {
+    submit() {
+      // TODO: uuid校验
+      if (this.uuid != "") {
+        this.uuidValid = true;
+        axios
+          .get<STDJSONResponse<QueryData>>(
+            "http://localhost:1146/query/" + this.uuid
+          )
+          .then((response) => {
+            if (response.data.success) {
+              if (response.data.data.exist) {
+                if (!response.data.data.init) {
+                  this.innerComponent = "SubmitProfile";
+                } else {
+                  this.innerComponent = "ShowProfile";
+                  this.innerComponentRef.updateData();
+                }
+                this.fetched = true;
+              } else {
+                this.notificationContent = "产品序列号不存在！";
+                this.showNotification = true;
+              }
+            } else {
+              this.notificationContent = "服务器错误！";
+              this.showNotification = true;
+            }
+          });
+      }
+    },
   },
   mounted() {
-    //TODO: 请求地址
-    axios
-      .get<STDJSONResponse<GetData<Profile>>>(
-        "http://localhost:1146/fetch/" + this.$route.params.uuid
-      )
-      .then((response) => {
-        if (response.data.success) {
-          if (response.data.data.exist) {
-            if (!response.data.data.init) {
-              this.innerComponent = "SubmitProfile";
+    if (this.$route.params.uuid != undefined) {
+      this.uuid = this.$route.params.uuid;
+      this.uuidValid = true;
+      //TODO: 请求地址
+      axios
+        .get<STDJSONResponse<QueryData>>(
+          "http://localhost:1146/query/" + this.$route.params.uuid
+        )
+        .then((response) => {
+          if (response.data.success) {
+            if (response.data.data.exist) {
+              if (!response.data.data.init) {
+                this.innerComponent = "SubmitProfile";
+              } else {
+                this.innerComponent = "ShowProfile";
+                this.innerComponentRef.updateData();
+              }
+              this.fetched = true;
             } else {
-              this.profile = response.data.data.profile;
-              this.innerComponent = "ShowProfile";
+              this.notificationContent = "产品序列号不存在！";
+              this.showNotification = true;
             }
-            this.fetched = true;
           } else {
-            //TODO: 错误处理
-            alert("Err");
+            this.notificationContent = "服务器错误！";
+            this.showNotification = true;
           }
-        } else {
-          //TODO: 错误处理
-          alert("Err");
-        }
-      });
+        });
+    }
   },
 });
 </script>

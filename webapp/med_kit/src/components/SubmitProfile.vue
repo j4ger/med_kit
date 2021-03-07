@@ -124,10 +124,10 @@
     transition="slide-fade-up"
   >
     {{ updateSuccess ? "提交成功" : "该序列号已被使用"
-    }}<w-button text @click="showNotification = false"
-      ><w-icon class="maa">mdi mdi-close-circle</w-icon></w-button
-    ></w-notification
-  >
+    }}<w-button text @click="showNotification = false">
+      <w-icon class="maa">mdi mdi-close-circle</w-icon>
+    </w-button>
+  </w-notification>
 </template>
 
 <script lang="ts">

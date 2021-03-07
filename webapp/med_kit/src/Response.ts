@@ -1,16 +1,34 @@
+import Profile from "./Profile";
+
 export interface STDJSONResponse<T> {
   success: boolean;
   data: T;
+  errmsg: string;
 }
 
 export interface CreateData {
   uuid: string;
 }
 
-export interface GetData<T> {
+export interface GetData {
+  profile: Profile;
+}
+
+export interface VerifyData {
+  username: string;
+}
+
+export interface LoginData {
+  JWT: boolean;
+}
+
+export interface RegisterData {
+  username: string;
+}
+
+export interface QueryData {
   exist: boolean;
   init: boolean;
-  profile: T;
 }
 
 export interface UpdateData {

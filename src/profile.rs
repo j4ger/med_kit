@@ -14,4 +14,7 @@ pub struct Profile {
     pub hospital: String,
     pub firstTime: bool,
     pub profession: String,
+    pub reportReady: bool,
+    pub openID: String,
+    pub reportURL: String,
 }

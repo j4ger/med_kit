@@ -11,7 +11,8 @@ const app = createApp({ render: () => h(App) });
 
 const routes = [
   { name: "初始化产品", path: "/init", component: InitProduct },
-  { name: "信息登记", path: "/fetch/:uuid", component: FetchProfile },
+  { name: "信息查询", path: "/query/:uuid", component: FetchProfile },
+  { name: "信息查询", path: "/query", component: FetchProfile },
 ];
 const router = createRouter({
   history: createWebHistory(),

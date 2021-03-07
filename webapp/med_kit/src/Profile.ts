@@ -12,6 +12,9 @@ export default class Profile {
   public hospital: string;
   public firstTime: boolean;
   public profession: string;
+  public reportReady: boolean;
+  public reportURL: string;
+  public openID: string;
 
   public constructor(
     uuid: string,
@@ -39,6 +42,9 @@ export default class Profile {
     this.hospital = hospital;
     this.firstTime = firstTime;
     this.profession = profession;
+    this.openID = "";
+    this.reportReady = false;
+    this.reportURL = "";
   }
 }
 
@@ -57,6 +63,9 @@ export function getDisplayName(key: string): string {
     hospital: "送检医院",
     firstTime: "是否首次送检",
     profession: "职业",
+    openID: "微信openID",
+    reportReady: "报告就绪",
+    reportURL: "报告URL",
   };
   return displayNameDictionary[key];
 }

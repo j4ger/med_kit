@@ -1,10 +1,10 @@
+use crate::config::get_config;
 use mongodb::{
     bson::{doc, Document},
     error::Error,
     results::{InsertOneResult, UpdateResult},
     Client, Collection,
 };
-use std::env;
 
 #[derive(Clone)]
 pub struct DBService {
@@ -13,7 +13,7 @@ pub struct DBService {
 
 impl DBService {
     pub async fn by_collection_name(name: &str) -> DBService {
-        let db_client = Client::with_uri_str(&env::var("MONGO_URL").unwrap())
+        let db_client = Client::with_uri_str(&get_config("MONGO_URL"))
             .await
             .unwrap();
         let db = db_client.database("med_kit");

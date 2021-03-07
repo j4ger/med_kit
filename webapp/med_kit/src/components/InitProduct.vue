@@ -43,8 +43,9 @@ export default defineComponent({
   methods: {
     init() {
       //TODO: 请求地址
+      //TODO: csrf token
       axios
-        .get<STDJSONResponse<InitData>>(
+        .post<STDJSONResponse<InitData>>(
           "http://localhost:1146/init/" + this.uuid
         )
         .then((response) => {
