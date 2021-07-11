@@ -1,0 +1,3 @@
+DROP TABLE products;
+
+DROP TYPE STAGE;

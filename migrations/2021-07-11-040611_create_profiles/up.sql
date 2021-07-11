@@ -1,0 +1,6 @@
+CREATE TABLE profiles (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  product_id INTEGER NOT NULL UNIQUE,
+  submit_time TIMESTAMP NOT NULL
+);
