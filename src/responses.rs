@@ -7,6 +7,8 @@ use serde::Serialize;
 #[derive(Debug)]
 pub enum GenericError {
     DieselError(DieselError),
+    ProductDuplicateError,
+    ProductReuseError,
 }
 
 #[derive(Serialize)]
@@ -37,8 +39,10 @@ impl<'a> Responder<'a, 'static> for GenericError {
         let error_message = match self {
             GenericError::DieselError(inner_error) => match inner_error {
                 DieselError::NotFound => "请求的资源不存在".to_string(),
-                _ => "数据库错误".to_string(),
+                _ => inner_error.to_string(),
             },
+            GenericError::ProductDuplicateError => "产品重复初始化".to_string(),
+            GenericError::ProductReuseError => "产品已被使用".to_string(),
         };
         Response::build_from(
             Json(ErrorResponse {
