@@ -1,6 +1,6 @@
 mod database_connection;
 mod models;
-mod product_id;
+mod product_barcode;
 mod responses;
 mod schema;
 
@@ -24,6 +24,7 @@ use chrono::NaiveDateTime;
 
 use crate::database_connection::MainDatabaseConnection;
 use crate::models::*;
+use crate::product_barcode::ProductBarcode;
 use crate::responses::{GenericResult, SuccessResponse};
 use crate::schema::*;
 
@@ -37,7 +38,8 @@ fn launch_rocket() -> _ {
                 get_all_profiles,
                 init_product,
                 get_product_digest,
-                submit_profile
+                submit_profile,
+                get_profile
             ],
         )
         .attach(MainDatabaseConnection::fairing())
@@ -88,9 +90,9 @@ async fn init_product(
 #[get("/get_product_digest/<product_barcode>")]
 async fn get_product_digest(
     db: MainDatabaseConnection,
-    product_barcode: &str,
+    product_barcode: ProductBarcode<'_>,
 ) -> GenericResult<ProductDigest> {
-    let barcode_input = product_barcode.to_owned();
+    let barcode_input = product_barcode.inner().to_owned();
     let result: ProductDigest = db
         .run(|c| {
             products::table
@@ -112,10 +114,10 @@ async fn get_product_digest(
 #[post("/submit_profile/<product_barcode>", data = "<profile_data>")]
 async fn submit_profile(
     db: MainDatabaseConnection,
-    product_barcode: &str,
+    product_barcode: ProductBarcode<'_>,
     profile_data: Json<ClientProfileData>,
 ) -> GenericResult<String> {
-    let barcode_input = product_barcode.to_owned();
+    let barcode_input = product_barcode.inner().to_owned();
     let query_result: ProductDigest = db
         .run(|c| {
             products::table
@@ -161,4 +163,12 @@ async fn submit_profile(
         0 => Err(GenericError::ProductReuseError),
         _ => SuccessResponse::build("提交成功".to_string()),
     }
+}
+
+#[get("/get_profile/<profile_id>")]
+async fn get_profile(db: MainDatabaseConnection, profile_id: i32) -> GenericResult<Profile> {
+    let result: Profile = db
+        .run(move |c| profiles::table.find(profile_id).get_result(c))
+        .await?;
+    SuccessResponse::build(result)
 }
