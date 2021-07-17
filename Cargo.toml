@@ -13,6 +13,9 @@ diesel = { version = "1.4.7", features = ["postgres", "chrono"] }
 chrono = { version = "0.4.19", features = ["serde"] }
 serde = "1.0.126"
 diesel-derive-enum = { version = "1.1.1", features = ["postgres"] }
+jsonwebtoken = "7.2.0"
+lazy_static = "1.4.0"
+rust-argon2 = "0.8.3"
 
 [dependencies.rocket_sync_db_pools]
 version = "0.1.0-rc.1"

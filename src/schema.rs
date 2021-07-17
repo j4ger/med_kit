@@ -32,7 +32,7 @@ table! {
 
     users (id) {
         id -> Int4,
-        uuid -> Uuid,
+        username -> Nullable<Varchar>,
         wechat_id -> Nullable<Varchar>,
         user_role -> Role,
         password_hashed -> Nullable<Varchar>,
