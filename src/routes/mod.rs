@@ -10,17 +10,26 @@ use user::*;
 
 use rocket::{Catcher, Route};
 
-pub fn api_routes() -> Vec<Route> {
+pub fn user_routes() -> Vec<Route> {
     routes![
-        get_all_profiles,
-        init_product,
-        get_product_digest,
-        submit_profile,
-        get_profile,
         register,
         login,
-        verify_login
+        verify_login,
+        get_users,
+        get_all_users,
+        change_user_role,
+        remove_user,
+        logout,
+        change_password
     ]
+}
+
+pub fn product_routes() -> Vec<Route> {
+    routes![init_product, get_product_digest,]
+}
+
+pub fn profile_routes() -> Vec<Route> {
+    routes![get_all_profiles, submit_profile, get_profile,]
 }
 
 pub fn api_error_catchers() -> Vec<Catcher> {

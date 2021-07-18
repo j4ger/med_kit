@@ -18,15 +18,19 @@ use dotenv::dotenv;
 
 use crate::auxiliary::CORS;
 use crate::database::MainDatabaseConnection;
-use crate::routes::{api_error_catchers, api_routes};
+use crate::routes::*;
 
 #[launch]
 fn launch_rocket() -> _ {
     dotenv().ok();
     rocket::build()
-        .mount("/api", api_routes())
+        .mount("/api/user", user_routes())
+        .mount("/api/product", product_routes())
+        .mount("/api/profile", profile_routes())
         .attach(MainDatabaseConnection::fairing())
         .register("/api", api_error_catchers())
         //TODO:CORS
         .attach(CORS)
 }
+
+//TODO: logging

@@ -1,7 +1,9 @@
 use chrono::NaiveDateTime;
+use rocket::request::FromParam;
 use serde;
 use serde::{Deserialize, Serialize};
 
+use crate::auxiliary::GenericError;
 use crate::database::*;
 
 #[derive(DbEnum, Debug, Deserialize, Serialize, Clone, PartialEq, Copy)]
@@ -11,6 +13,19 @@ pub enum RoleEnum {
     User,
     Staff,
     Admin,
+}
+
+impl<'a> FromParam<'a> for RoleEnum {
+    type Error = GenericError;
+
+    fn from_param(param: &'a str) -> Result<Self, Self::Error> {
+        match param.to_lowercase().as_ref() {
+            "admin" => Ok(Self::Admin),
+            "user" => Ok(Self::User),
+            "staff" => Ok(Self::Staff),
+            _ => Err(GenericError::InvalidInputError),
+        }
+    }
 }
 
 #[derive(Queryable, Deserialize, Serialize)]
@@ -42,13 +57,18 @@ pub struct UserLoggedInDigest {
 }
 
 #[derive(Deserialize)]
-pub struct ClientLoginData {
+pub struct ClientUsernamePasswordData {
     pub username: String,
     pub password: String,
 }
 
 #[derive(Deserialize)]
-pub struct ClientRegisterData {
-    pub username: String,
-    pub password: String,
+pub struct ClientChangeRoleData {
+    pub user_id: i32,
+    pub new_role: RoleEnum,
+}
+
+#[derive(Deserialize)]
+pub struct ClientRemoveUserData {
+    pub user_id: i32,
 }

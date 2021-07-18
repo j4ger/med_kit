@@ -17,6 +17,7 @@ pub enum GenericError {
     PasswordNotSetError,
     UserAlreadyExistsError,
     PermissionDeniedError,
+    InvalidInputError,
 }
 
 #[derive(Serialize)]
@@ -60,6 +61,7 @@ impl<'a> Responder<'a, 'static> for GenericError {
             Self::PasswordNotSetError => "密码未设置",
             Self::UserAlreadyExistsError => "用户名已被占用",
             Self::PermissionDeniedError => "权限错误",
+            Self::InvalidInputError => "输入不合法",
         }
         .to_string();
         Response::build_from(

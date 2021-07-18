@@ -1,14 +1,16 @@
 use crate::auxiliary::{GenericError, GenericResult, SuccessResponse};
 use crate::database::{self, MainDatabaseConnection};
 use crate::models::*;
-use crate::user::{gen_token_cookie, UserDigest, USER_AUTH_ARGON2_CONFIG, USER_AUTH_SALT};
+use crate::user::{
+    gen_token_cookie, AdminAuth, UserDigest, USER_AUTH_ARGON2_CONFIG, USER_AUTH_SALT,
+};
 
 use diesel::prelude::*;
 
 use chrono::prelude::*;
 use chrono::NaiveDateTime;
 
-use rocket::http::CookieJar;
+use rocket::http::{Cookie, CookieJar};
 use rocket::serde::json::Json;
 
 #[get("/verify_login")]
@@ -32,7 +34,7 @@ pub async fn verify_login(
 #[post("/login", data = "<login_data>")]
 pub async fn login(
     db: MainDatabaseConnection,
-    login_data: Json<ClientLoginData>,
+    login_data: Json<ClientUsernamePasswordData>,
     cookies: &CookieJar<'_>,
 ) -> GenericResult<UserLoggedInDigest> {
     let username = login_data.username.to_owned();
@@ -72,7 +74,7 @@ pub async fn login(
 #[post("/register", data = "<register_data>")]
 pub async fn register(
     db: MainDatabaseConnection,
-    register_data: Json<ClientRegisterData>,
+    register_data: Json<ClientUsernamePasswordData>,
     cookies: &CookieJar<'_>,
 ) -> GenericResult<UserLoggedInDigest> {
     let username = register_data.username.to_owned();
@@ -125,4 +127,123 @@ pub async fn register(
             }
         }
     }
+}
+
+#[get("/get_users/<page>/<filter>")]
+pub async fn get_users(
+    db: MainDatabaseConnection,
+    _admin: AdminAuth,
+    page: i32,
+    filter: RoleEnum,
+) -> GenericResult<Vec<User>> {
+    let results: Vec<User> = db
+        .run(move |c| {
+            database::users::table
+                .filter(database::users::user_role.eq(filter))
+                .order(database::users::id)
+                .limit(10)
+                .offset((page * 10) as i64)
+                .get_results(c)
+        })
+        .await?;
+    SuccessResponse::build(results)
+}
+
+#[get("/get_all_users/<page>")]
+pub async fn get_all_users(
+    db: MainDatabaseConnection,
+    _admin: AdminAuth,
+    page: i32,
+) -> GenericResult<Vec<User>> {
+    let results: Vec<User> = db
+        .run(move |c| {
+            database::users::table
+                .order(database::users::id)
+                .limit(10)
+                .offset((page * 10) as i64)
+                .get_results(c)
+        })
+        .await?;
+    SuccessResponse::build(results)
+}
+
+#[post("/change_user_role", data = "<change_user_role_data>")]
+pub async fn change_user_role(
+    db: MainDatabaseConnection,
+    change_user_role_data: Json<ClientChangeRoleData>,
+    _admin: AdminAuth,
+) -> GenericResult<String> {
+    match db
+        .run(move |c| {
+            diesel::update(database::users::table.find(change_user_role_data.user_id))
+                .set(database::users::user_role.eq(change_user_role_data.new_role))
+                .execute(c)
+        })
+        .await?
+    {
+        0 => Err(GenericError::ServerInternalError),
+        _ => SuccessResponse::build("完成".to_string()),
+    }
+}
+
+#[post("/remove_user", data = "<remove_user_data>")]
+pub async fn remove_user(
+    db: MainDatabaseConnection,
+    remove_user_data: Json<ClientRemoveUserData>,
+    _admin: AdminAuth,
+) -> GenericResult<String> {
+    match db
+        .run(move |c| {
+            diesel::delete(database::users::table.find(remove_user_data.user_id)).execute(c)
+        })
+        .await?
+    {
+        1 => SuccessResponse::build("完成".to_string()),
+        _ => Err(GenericError::ServerInternalError),
+    }
+}
+
+#[post("/change_password", data = "<change_password_data>")]
+pub async fn change_password(
+    db: MainDatabaseConnection,
+    change_password_data: Json<ClientUsernamePasswordData>,
+    user_digest: UserDigest,
+) -> GenericResult<String> {
+    let target_user_id = user_digest.user_id;
+    let query_result: User = db
+        .run(move |c| database::users::table.find(target_user_id).get_result(c))
+        .await?;
+    if query_result
+        .username
+        .ok_or(GenericError::PermissionDeniedError)?
+        == change_password_data.username
+    {
+        let password_hashed = argon2::hash_encoded(
+            &change_password_data.password.as_bytes(),
+            USER_AUTH_SALT.as_bytes(),
+            &USER_AUTH_ARGON2_CONFIG,
+        )
+        .map_err(|_| GenericError::ServerInternalError)?;
+        match db
+            .run(move |c| {
+                diesel::update(database::users::table.find(target_user_id))
+                    .set(database::users::password_hashed.eq(password_hashed))
+                    .execute(c)
+            })
+            .await?
+        {
+            1 => SuccessResponse::build("完成".to_string()),
+            _ => Err(GenericError::ServerInternalError),
+        }
+    } else {
+        Err(GenericError::PermissionDeniedError)
+    }
+}
+
+#[get("/logout")]
+pub async fn logout(cookies: &CookieJar<'_>) -> GenericResult<String> {
+    if let Some(_) = cookies.get("token") {
+        cookies.remove(Cookie::named("token"));
+    }
+    SuccessResponse::build("完成".to_string())
 }
