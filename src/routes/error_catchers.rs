@@ -2,7 +2,7 @@ use rocket::http::Status;
 use rocket::request::Request;
 use rocket::serde::json::Json;
 
-use crate::responses::ErrorResponse;
+use crate::auxiliary::ErrorResponse;
 
 #[catch(default)]
 pub fn default_error_catcher(status: Status, _request: &Request) -> Json<ErrorResponse> {

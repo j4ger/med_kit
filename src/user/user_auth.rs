@@ -2,23 +2,22 @@ use argon2;
 use chrono::{prelude::*, Duration};
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use rocket::http::{Cookie, SameSite, Status};
-use rocket::log::private::info;
 use rocket::outcome::Outcome;
 use rocket::request::{FromRequest, Request};
 use serde::{Deserialize, Serialize};
 use std::{env, fs};
 
+use crate::auxiliary::GenericError;
 use crate::models::RoleEnum;
-use crate::responses::GenericError;
 
 lazy_static! {
     static ref ENCODING_KEY_FILE: Vec<u8> = read_key_from_config("USER_AUTH_ENCODING_KEY");
     static ref DECODING_KEY_FILE: Vec<u8> = read_key_from_config("USER_AUTH_DECODING_KEY");
     static ref USER_AUTH_ENCODING_KEY: EncodingKey =
         EncodingKey::from_rsa_pem(&ENCODING_KEY_FILE).expect("EncodingKey加载失败");
-    static ref USER_AUTH_DECODING_KEY: DecodingKey<'static> =
+    pub static ref USER_AUTH_DECODING_KEY: DecodingKey<'static> =
         DecodingKey::from_rsa_pem(&DECODING_KEY_FILE).expect("DecodingKey加载失败");
-    static ref USER_AUTH_VALIDATION: Validation = Validation::new(Algorithm::RS256);
+    pub static ref USER_AUTH_VALIDATION: Validation = Validation::new(Algorithm::RS256);
     static ref USER_AUTH_HEADER: Header = Header::new(Algorithm::RS256);
     pub static ref USER_AUTH_SALT: String = env::var("USER_AUTH_SALT").expect("未设置Salt");
     pub static ref USER_AUTH_ARGON2_CONFIG: argon2::Config<'static> = argon2::Config::default();
@@ -30,12 +29,12 @@ fn read_key_from_config(config_key: &str) -> Vec<u8> {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct Claims {
+pub struct TokenClaims {
     #[serde(with = "jwt_numeric_date")]
     exp: DateTime<Utc>,
 
-    user_id: i32,
-    user_role: RoleEnum,
+    pub user_id: i32,
+    pub user_role: RoleEnum,
 }
 
 pub struct UserDigest {
@@ -51,7 +50,7 @@ impl<'r> FromRequest<'r> for UserDigest {
         match request.headers().get_one("Authorization") {
             Some(token_string) => match token_string.starts_with("Bearer") {
                 true => {
-                    match decode::<Claims>(
+                    match decode::<TokenClaims>(
                         &token_string[7..],
                         &USER_AUTH_DECODING_KEY,
                         &USER_AUTH_VALIDATION,
@@ -67,7 +66,7 @@ impl<'r> FromRequest<'r> for UserDigest {
             },
             None => match request.cookies().get("token") {
                 Some(token_cookie) => {
-                    match decode::<Claims>(
+                    match decode::<TokenClaims>(
                         token_cookie.value(),
                         &USER_AUTH_DECODING_KEY,
                         &USER_AUTH_VALIDATION,
@@ -87,7 +86,7 @@ impl<'r> FromRequest<'r> for UserDigest {
 
 pub fn gen_token_cookie<'a>(user_id: i32, user_role: RoleEnum) -> Result<Cookie<'a>, GenericError> {
     let expiration_datetime = Utc::now() + Duration::weeks(1);
-    let new_claims = Claims {
+    let new_claims = TokenClaims {
         exp: expiration_datetime,
         user_id,
         user_role,

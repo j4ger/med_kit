@@ -2,7 +2,7 @@
 # see diesel.rs/guides/configuring-diesel-cli
 
 [print_schema]
-file = "src/schema.rs"
+file = "src/database/schema.rs"
 import_types = [
     "diesel::sql_types::*",
     "crate::models::Stage",
