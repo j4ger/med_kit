@@ -1,7 +1,9 @@
 use diesel::result::Error as DieselError;
+
 use rocket::request::Request;
 use rocket::response::{self, Responder, Response};
 use rocket::serde::json::Json;
+
 use serde::Serialize;
 
 #[derive(Debug)]

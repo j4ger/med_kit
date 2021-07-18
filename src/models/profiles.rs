@@ -1,6 +1,6 @@
 use chrono::NaiveDateTime;
-use serde;
-use serde::{Deserialize, Serialize};
+
+use serde::{self, Deserialize, Serialize};
 
 use crate::database::*;
 

@@ -9,14 +9,6 @@ use chrono::NaiveDateTime;
 
 use rocket::serde::json::Json;
 
-#[get("/all_profiles")]
-pub async fn get_all_profiles(db: MainDatabaseConnection) -> GenericResult<Vec<Profile>> {
-    let results = db
-        .run(|c| database::profiles::table.load::<Profile>(c))
-        .await?;
-    SuccessResponse::build(results)
-}
-
 #[post("/submit_profile/<product_barcode>", data = "<profile_data>")]
 pub async fn submit_profile(
     db: MainDatabaseConnection,

@@ -25,11 +25,16 @@ pub fn user_routes() -> Vec<Route> {
 }
 
 pub fn product_routes() -> Vec<Route> {
-    routes![init_product, get_product_digest,]
+    routes![
+        init_product,
+        get_product_digest,
+        get_products,
+        get_filtered_products
+    ]
 }
 
 pub fn profile_routes() -> Vec<Route> {
-    routes![get_all_profiles, submit_profile, get_profile,]
+    routes![submit_profile, get_profile,]
 }
 
 pub fn api_error_catchers() -> Vec<Catcher> {

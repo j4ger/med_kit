@@ -1,7 +1,8 @@
 use chrono::NaiveDateTime;
+
 use rocket::request::FromParam;
-use serde;
-use serde::{Deserialize, Serialize};
+
+use serde::{self, Deserialize, Serialize};
 
 use crate::auxiliary::GenericError;
 use crate::database::*;

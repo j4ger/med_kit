@@ -1,6 +1,7 @@
 use crate::auxiliary::{GenericError, GenericResult, ProductBarcode, SuccessResponse};
 use crate::database::{self, MainDatabaseConnection};
 use crate::models::*;
+use crate::user::StaffAuth;
 
 use diesel::prelude::*;
 
@@ -67,4 +68,42 @@ pub async fn get_product_digest(
         })
         .await?;
     SuccessResponse::build(result)
+}
+
+#[get("/get_products/<page>/<filter>")]
+pub async fn get_products(
+    db: MainDatabaseConnection,
+    page: i32,
+    filter: StageEnum,
+    _staff: StaffAuth,
+) -> GenericResult<Vec<Product>> {
+    SuccessResponse::build(
+        db.run(move |c| {
+            database::products::table
+                .filter(database::products::current_stage.eq(filter))
+                .order(database::products::id)
+                .limit(10)
+                .offset((page * 10) as i64)
+                .get_results(c)
+        })
+        .await?,
+    )
+}
+
+#[get("/get_products/<page>")]
+pub async fn get_filtered_products(
+    db: MainDatabaseConnection,
+    page: i32,
+    _staff: StaffAuth,
+) -> GenericResult<Vec<Product>> {
+    SuccessResponse::build(
+        db.run(move |c| {
+            database::products::table
+                .order(database::products::id)
+                .limit(10)
+                .offset((page * 10) as i64)
+                .get_results(c)
+        })
+        .await?,
+    )
 }
