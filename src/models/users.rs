@@ -73,3 +73,29 @@ pub struct ClientChangeRoleData {
 pub struct ClientRemoveUserData {
     pub user_id: i32,
 }
+
+#[derive(Deserialize)]
+pub struct ClientWechatLoginData {
+    pub code: String,
+}
+
+#[derive(Deserialize)]
+pub struct WechatOpenIdResponse {
+    pub access_token: String,
+    expires_in: i32,
+    refresh_token: String,
+    pub openid: String,
+    scope: String,
+}
+
+#[derive(Deserialize)]
+pub struct WechatUserinfoResponse {
+    openid: String,
+    pub nickname: String,
+    sex: i32,
+    province: String,
+    country: String,
+    headimgurl: String,
+    privilege: Vec<String>,
+    unionid: String,
+}

@@ -22,7 +22,8 @@ pub fn user_routes() -> Vec<Route> {
         change_user_role,
         remove_user,
         logout,
-        change_password
+        change_password,
+        wechat_login
     ]
 }
 

@@ -2,6 +2,7 @@ use crate::auth::{
     gen_token_cookie, AdminAuth, UserDigest, USER_AUTH_ARGON2_CONFIG, USER_AUTH_SALT,
 };
 use crate::auxiliary::{GenericError, GenericResult, SuccessResponse};
+use crate::auxiliary::{WECHAT_APPID, WECHAT_APPSECRET};
 use crate::database::{self, MainDatabaseConnection};
 use crate::models::*;
 
@@ -10,8 +11,17 @@ use diesel::prelude::*;
 use chrono::prelude::*;
 use chrono::NaiveDateTime;
 
+use isahc::{self, AsyncReadResponseExt};
+
 use rocket::http::{Cookie, CookieJar};
 use rocket::serde::json::Json;
+
+use lazy_static;
+
+lazy_static! {
+    static ref WECHAT_USERINFO_URL: &'static str =
+        "https://api.weixin.qq.com/sns/userinfo?access_token={}&openid={}&lang=zh_CN";
+}
 
 #[get("/verify_login")]
 pub async fn verify_login(
@@ -246,4 +256,93 @@ pub async fn logout(cookies: &CookieJar<'_>) -> GenericResult<String> {
         cookies.remove(Cookie::named("token"));
     }
     SuccessResponse::build("完成".to_string())
+}
+
+#[post("/wechat_login", data = "<wechat_login_data>")]
+pub async fn wechat_login(
+    db: MainDatabaseConnection,
+    wechat_login_data: Json<ClientWechatLoginData>,
+    cookies: &CookieJar<'_>,
+) -> GenericResult<UserLoggedInDigest> {
+    let parsed_open_id_reponse: WechatOpenIdResponse = isahc::get_async(format!(
+        "https://api.weixin.qq.com/sns/oauth2/access_token?\
+    appid={}&secret={}&code={}&grant_type=authorization_code\
+    ",
+        *WECHAT_APPID, *WECHAT_APPSECRET, &wechat_login_data.code
+    ))
+    .await
+    .map_err(|error| {
+        error!("获取OpenId时出错：{:?}", error);
+        GenericError::GetWechatOpenIdError
+    })?
+    .json()
+    .await
+    .map_err(|error| {
+        error!("获取OpenId时出错：{:?}", error);
+        GenericError::GetWechatOpenIdError
+    })?;
+    let openid = parsed_open_id_reponse.openid.to_owned();
+    match db
+        .run(move |c| {
+            database::users::table
+                .filter(database::users::wechat_id.eq_all(Some(openid)))
+                .get_result::<User>(c)
+                .optional()
+        })
+        .await?
+    {
+        Some(parsed_user) => match gen_token_cookie(parsed_user.id, parsed_user.user_role) {
+            Ok(token_cookie) => {
+                cookies.add(token_cookie);
+                SuccessResponse::build(UserLoggedInDigest {
+                    user_role: parsed_user.user_role,
+                    username: parsed_user.username,
+                })
+            }
+            Err(_) => Err(GenericError::ServerInternalError),
+        },
+        None => {
+            let parsed_userinfo_reponse: WechatUserinfoResponse = isahc::get_async(format!(
+                "https://api.weixin.qq.com/sns/userinfo?access_token={}&openid={}&lang=zh_CN",
+                parsed_open_id_reponse.access_token, parsed_open_id_reponse.openid
+            ))
+            .await
+            .map_err(|error| {
+                error!("获取Userinfo时出错：{:?}", error);
+                GenericError::GetWechatUserinfoError
+            })?
+            .json()
+            .await
+            .map_err(|error| {
+                error!("获取Userinfo时出错：{:?}", error);
+                GenericError::GetWechatUserinfoError
+            })?;
+            let current_time = Utc::now().naive_utc();
+            let new_user = NewUserData {
+                password_hashed: None,
+                phone_number: None,
+                sign_up_time: current_time,
+                user_role: RoleEnum::User,
+                username: Some(parsed_userinfo_reponse.nickname),
+                wechat_id: Some(parsed_open_id_reponse.openid),
+            };
+            let insert_result: User = db
+                .run(move |c| {
+                    diesel::insert_into(database::users::table)
+                        .values(new_user)
+                        .get_result(c)
+                })
+                .await?;
+            match gen_token_cookie(insert_result.id, insert_result.user_role) {
+                Ok(token_cookie) => {
+                    cookies.add(token_cookie);
+                    SuccessResponse::build(UserLoggedInDigest {
+                        username: insert_result.username,
+                        user_role: insert_result.user_role,
+                    })
+                }
+                Err(_) => Err(GenericError::ServerInternalError),
+            }
+        }
+    }
 }

@@ -22,6 +22,9 @@ pub enum GenericError {
     UserAlreadyExistsError,
     PermissionDeniedError,
     InvalidInputError,
+    GetWechatAccessTokenError,
+    GetWechatOpenIdError,
+    GetWechatUserinfoError,
 }
 
 #[derive(Serialize)]
@@ -67,6 +70,9 @@ impl<'a> Responder<'a, 'static> for GenericError {
             Self::UserAlreadyExistsError => "用户名已被占用",
             Self::PermissionDeniedError => "权限错误",
             Self::InvalidInputError => "输入不合法",
+            Self::GetWechatAccessTokenError => "微信AccessToken获取失败",
+            Self::GetWechatOpenIdError => "微信OpenId获取失败",
+            Self::GetWechatUserinfoError => "微信Userinfo获取失败",
         }
         .to_string();
         Response::build_from(

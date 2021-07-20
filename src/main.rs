@@ -24,7 +24,7 @@ use log;
 
 use std::env;
 
-use crate::auxiliary::CORS;
+use crate::auxiliary::{WechatAccessToken, CORS};
 use crate::database::MainDatabaseConnection;
 use crate::routes::*;
 
@@ -57,6 +57,7 @@ fn launch_rocket() -> _ {
         .register("/api", api_error_catchers())
         //TODO:CORS
         .attach(CORS)
+        .manage(WechatAccessToken::new())
 }
 
 //TODO: logging
