@@ -3,14 +3,17 @@ use rocket::http::Status;
 use rocket::outcome::Outcome;
 use rocket::request::{FromRequest, Request};
 
+use crate::auth::{TokenClaims, USER_AUTH_DECODING_KEY, USER_AUTH_VALIDATION};
 use crate::auxiliary::GenericError;
 use crate::models::RoleEnum;
-use crate::user::{TokenClaims, USER_AUTH_DECODING_KEY, USER_AUTH_VALIDATION};
 
-pub struct AdminAuth;
+pub struct StaffAuth {
+    pub user_id: i32,
+    pub user_role: RoleEnum,
+}
 
 #[rocket::async_trait]
-impl<'r> FromRequest<'r> for AdminAuth {
+impl<'r> FromRequest<'r> for StaffAuth {
     type Error = GenericError;
 
     async fn from_request(request: &'r Request<'_>) -> rocket::request::Outcome<Self, Self::Error> {
@@ -23,11 +26,14 @@ impl<'r> FromRequest<'r> for AdminAuth {
                         &USER_AUTH_VALIDATION,
                     ) {
                         Ok(decoded_claims) => match decoded_claims.claims.user_role {
-                            RoleEnum::Admin => Outcome::Success(AdminAuth),
-                            _ => Outcome::Failure((
+                            RoleEnum::User => Outcome::Failure((
                                 Status::Forbidden,
                                 GenericError::PermissionDeniedError,
                             )),
+                            _ => Outcome::Success(StaffAuth {
+                                user_id: decoded_claims.claims.user_id,
+                                user_role: decoded_claims.claims.user_role,
+                            }),
                         },
                         Err(_) => Outcome::Failure((Status::Unauthorized, GenericError::AuthError)),
                     }
@@ -42,16 +48,25 @@ impl<'r> FromRequest<'r> for AdminAuth {
                         &USER_AUTH_VALIDATION,
                     ) {
                         Ok(decoded_claims) => match decoded_claims.claims.user_role {
-                            RoleEnum::Admin => Outcome::Success(AdminAuth),
-                            _ => Outcome::Failure((
+                            RoleEnum::User => Outcome::Failure((
                                 Status::Forbidden,
                                 GenericError::PermissionDeniedError,
                             )),
+                            _ => Outcome::Success(StaffAuth {
+                                user_id: decoded_claims.claims.user_id,
+                                user_role: decoded_claims.claims.user_role,
+                            }),
                         },
-                        Err(_) => Outcome::Failure((Status::Unauthorized, GenericError::AuthError)),
+                        Err(error) => {
+                            info!("{:?}", error);
+                            Outcome::Failure((Status::Unauthorized, GenericError::AuthError))
+                        }
                     }
                 }
-                None => Outcome::Failure((Status::Unauthorized, GenericError::AuthError)),
+                None => {
+                    info!("No token was found.");
+                    Outcome::Failure((Status::Unauthorized, GenericError::AuthError))
+                }
             },
         }
     }

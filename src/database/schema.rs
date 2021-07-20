@@ -9,7 +9,7 @@ table! {
         profile_id -> Nullable<Int4>,
         init_time -> Timestamp,
         current_stage -> Stage,
-        report_id -> Nullable<Int4>,
+        report_id -> Nullable<Uuid>,
     }
 }
 
@@ -22,6 +22,20 @@ table! {
         id -> Int4,
         user_id -> Int4,
         submit_time -> Timestamp,
+    }
+}
+
+table! {
+    use diesel::sql_types::*;
+    use crate::models::Stage;
+    use crate::models::Role;
+
+    reports (id) {
+        id -> Uuid,
+        uploader_id -> Int4,
+        filename -> Nullable<Varchar>,
+        download_url -> Varchar,
+        upload_time -> Timestamp,
     }
 }
 
@@ -44,5 +58,6 @@ table! {
 allow_tables_to_appear_in_same_query!(
     products,
     profiles,
+    reports,
     users,
 );

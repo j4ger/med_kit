@@ -3,14 +3,14 @@ use rocket::http::Status;
 use rocket::outcome::Outcome;
 use rocket::request::{FromRequest, Request};
 
+use crate::auth::{TokenClaims, USER_AUTH_DECODING_KEY, USER_AUTH_VALIDATION};
 use crate::auxiliary::GenericError;
 use crate::models::RoleEnum;
-use crate::user::{TokenClaims, USER_AUTH_DECODING_KEY, USER_AUTH_VALIDATION};
 
-pub struct StaffAuth;
+pub struct AdminAuth;
 
 #[rocket::async_trait]
-impl<'r> FromRequest<'r> for StaffAuth {
+impl<'r> FromRequest<'r> for AdminAuth {
     type Error = GenericError;
 
     async fn from_request(request: &'r Request<'_>) -> rocket::request::Outcome<Self, Self::Error> {
@@ -23,11 +23,11 @@ impl<'r> FromRequest<'r> for StaffAuth {
                         &USER_AUTH_VALIDATION,
                     ) {
                         Ok(decoded_claims) => match decoded_claims.claims.user_role {
-                            RoleEnum::User => Outcome::Failure((
+                            RoleEnum::Admin => Outcome::Success(AdminAuth),
+                            _ => Outcome::Failure((
                                 Status::Forbidden,
                                 GenericError::PermissionDeniedError,
                             )),
-                            _ => Outcome::Success(StaffAuth),
                         },
                         Err(_) => Outcome::Failure((Status::Unauthorized, GenericError::AuthError)),
                     }
@@ -42,11 +42,11 @@ impl<'r> FromRequest<'r> for StaffAuth {
                         &USER_AUTH_VALIDATION,
                     ) {
                         Ok(decoded_claims) => match decoded_claims.claims.user_role {
-                            RoleEnum::User => Outcome::Failure((
+                            RoleEnum::Admin => Outcome::Success(AdminAuth),
+                            _ => Outcome::Failure((
                                 Status::Forbidden,
                                 GenericError::PermissionDeniedError,
                             )),
-                            _ => Outcome::Success(StaffAuth),
                         },
                         Err(_) => Outcome::Failure((Status::Unauthorized, GenericError::AuthError)),
                     }

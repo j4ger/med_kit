@@ -6,5 +6,5 @@ CREATE TABLE products (
     profile_id INTEGER,
     init_time TIMESTAMP NOT NULL,
     current_stage STAGE NOT NULL DEFAULT 'Initialized',
-    report_id INTEGER
+    report_id uuid
 );

@@ -9,13 +9,16 @@ edition = "2018"
 [dependencies]
 dotenv = "0.15.0"
 rocket = { version = "0.5.0-rc.1", features = ["json"] }
-diesel = { version = "1.4.7", features = ["postgres", "chrono"] }
+diesel = { version = "1.4.7", features = ["postgres", "chrono", "uuidv07"] }
 chrono = { version = "0.4.19", features = ["serde"] }
 serde = "1.0.126"
 diesel-derive-enum = { version = "1.1.1", features = ["postgres"] }
 jsonwebtoken = "7.2.0"
 lazy_static = "1.4.0"
 rust-argon2 = "0.8.3"
+uuid = { version = "0.8.2", features = ["v4", "serde"] }
+fern = "0.6.0"
+log = "0.4.14"
 
 [dependencies.rocket_sync_db_pools]
 version = "0.1.0-rc.1"

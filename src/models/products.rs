@@ -4,6 +4,8 @@ use rocket::request::FromParam;
 
 use serde::{self, Deserialize, Serialize};
 
+use uuid::Uuid;
+
 use crate::{auxiliary::GenericError, database::*};
 
 #[derive(DbEnum, Debug, Deserialize, Serialize, Clone, PartialEq, Copy)]
@@ -36,7 +38,7 @@ pub struct Product {
     pub profile_id: Option<i32>,
     pub init_time: NaiveDateTime,
     pub current_stage: StageEnum,
-    pub report_id: Option<i32>,
+    pub report_id: Option<Uuid>,
 }
 
 #[derive(Deserialize)]
@@ -59,7 +61,7 @@ pub struct ProductDigest {
     pub product_barcode: String,
     pub init_time: NaiveDateTime,
     pub current_stage: StageEnum,
-    pub report_id: Option<i32>,
+    pub report_id: Option<Uuid>,
 }
 
 #[derive(AsChangeset)]

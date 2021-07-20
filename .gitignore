@@ -1,4 +1,6 @@
 /target
 .env
 *.pem
+/reports
 .vscode
+.log

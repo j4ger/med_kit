@@ -1,9 +1,9 @@
+use crate::auth::{
+    gen_token_cookie, AdminAuth, UserDigest, USER_AUTH_ARGON2_CONFIG, USER_AUTH_SALT,
+};
 use crate::auxiliary::{GenericError, GenericResult, SuccessResponse};
 use crate::database::{self, MainDatabaseConnection};
 use crate::models::*;
-use crate::user::{
-    gen_token_cookie, AdminAuth, UserDigest, USER_AUTH_ARGON2_CONFIG, USER_AUTH_SALT,
-};
 
 use diesel::prelude::*;
 
@@ -132,7 +132,7 @@ pub async fn register(
 #[get("/get_users/<page>/<filter>")]
 pub async fn get_users(
     db: MainDatabaseConnection,
-    _admin: AdminAuth,
+    //    _admin: AdminAuth,
     page: i32,
     filter: RoleEnum,
 ) -> GenericResult<Vec<User>> {
@@ -152,7 +152,7 @@ pub async fn get_users(
 #[get("/get_all_users/<page>")]
 pub async fn get_all_users(
     db: MainDatabaseConnection,
-    _admin: AdminAuth,
+    //  _admin: AdminAuth,
     page: i32,
 ) -> GenericResult<Vec<User>> {
     let results: Vec<User> = db
@@ -171,7 +171,7 @@ pub async fn get_all_users(
 pub async fn change_user_role(
     db: MainDatabaseConnection,
     change_user_role_data: Json<ClientChangeRoleData>,
-    _admin: AdminAuth,
+    // _admin: AdminAuth,
 ) -> GenericResult<String> {
     match db
         .run(move |c| {

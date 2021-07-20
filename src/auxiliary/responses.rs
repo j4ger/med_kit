@@ -6,6 +6,8 @@ use rocket::serde::json::Json;
 
 use serde::Serialize;
 
+use log::info;
+
 #[derive(Debug)]
 pub enum GenericError {
     DieselError(DieselError),
@@ -48,6 +50,7 @@ pub type GenericResult<T> = Result<Json<SuccessResponse<T>>, GenericError>;
 
 impl<'a> Responder<'a, 'static> for GenericError {
     fn respond_to(self, req: &'a Request<'_>) -> response::Result<'static> {
+        info!("{:?}", self);
         let error_message = match self {
             Self::DieselError(inner_error) => match inner_error {
                 DieselError::NotFound => "请求的资源不存在",

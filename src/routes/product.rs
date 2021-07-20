@@ -1,7 +1,7 @@
+use crate::auth::StaffAuth;
 use crate::auxiliary::{GenericError, GenericResult, ProductBarcode, SuccessResponse};
 use crate::database::{self, MainDatabaseConnection};
 use crate::models::*;
-use crate::user::StaffAuth;
 
 use diesel::prelude::*;
 
