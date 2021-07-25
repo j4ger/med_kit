@@ -20,6 +20,7 @@ uuid = { version = "0.8.2", features = ["v4", "serde"] }
 fern = "0.6.0"
 log = "0.4.14"
 isahc = { version = "1.4.0", features = ["json"] }
+time = "0.2.27"
 
 [dependencies.rocket_sync_db_pools]
 version = "0.1.0-rc.1"

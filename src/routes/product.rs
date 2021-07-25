@@ -1,4 +1,4 @@
-use crate::auth::StaffAuth;
+use crate::auth::{StaffAuth, UserDigest};
 use crate::auxiliary::{GenericError, GenericResult, ProductBarcode, SuccessResponse};
 use crate::database::{self, MainDatabaseConnection};
 use crate::models::*;
@@ -50,24 +50,34 @@ pub async fn init_product(
 pub async fn get_product_digest(
     db: MainDatabaseConnection,
     product_barcode: ProductBarcode<'_>,
-) -> GenericResult<ProductDigest> {
+    user_digest: UserDigest,
+) -> GenericResult<Product> {
     let barcode_input = product_barcode.inner().to_owned();
-    let result: ProductDigest = db
+    let result: Product = db
         .run(|c| {
             database::products::table
-                .select((
-                    database::products::id,
-                    database::products::product_barcode,
-                    database::products::init_time,
-                    database::products::current_stage,
-                    database::products::report_id,
-                ))
                 .filter(database::products::product_barcode.eq_all(barcode_input))
                 .limit(1)
                 .get_result(c)
         })
         .await?;
-    SuccessResponse::build(result)
+    match result.current_stage {
+        StageEnum::Initialized => SuccessResponse::build(result),
+        _ => match user_digest.user_role {
+            RoleEnum::User => {
+                let profile_id = result.profile_id.ok_or(GenericError::ServerInternalError)?;
+                let profile_query_result: Profile = db
+                    .run(move |c| database::profiles::table.find(profile_id).get_result(c))
+                    .await?;
+                if profile_query_result.user_id == user_digest.user_id {
+                    SuccessResponse::build(result)
+                } else {
+                    Err(GenericError::PermissionDeniedError)
+                }
+            }
+            _ => SuccessResponse::build(result),
+        },
+    }
 }
 
 #[get("/get_products/<page>/<filter>")]

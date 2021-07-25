@@ -159,7 +159,7 @@ pub async fn get_users(
     SuccessResponse::build(results)
 }
 
-#[get("/get_all_users/<page>")]
+#[get("/get_users/<page>")]
 pub async fn get_all_users(
     db: MainDatabaseConnection,
     //  _admin: AdminAuth,

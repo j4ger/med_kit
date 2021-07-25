@@ -70,5 +70,3 @@ pub async fn get_profile(db: MainDatabaseConnection, profile_id: i32) -> Generic
         .await?;
     SuccessResponse::build(result)
 }
-
-//TODO: login with wechat

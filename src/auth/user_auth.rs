@@ -6,6 +6,7 @@ use rocket::outcome::Outcome;
 use rocket::request::{FromRequest, Request};
 use serde::{Deserialize, Serialize};
 use std::{env, fs};
+use time;
 
 use crate::auxiliary::GenericError;
 use crate::models::RoleEnum;
@@ -95,9 +96,11 @@ pub fn gen_token_cookie<'a>(user_id: i32, user_role: RoleEnum) -> Result<Cookie<
         .map_err(|_| GenericError::TokenError)?;
     //TODO: Cookie options
     let output_cookie = Cookie::build("token", token)
-        .http_only(true)
-        //   .domain(env::var("COOKIE_DOMAIN").expect("未设置COOKIE_DOMAIN"))
-        //   .same_site(SameSite::None)
+        .expires(time::OffsetDateTime::now_utc() + time::Duration::weeks(1))
+       // .http_only(true)
+     //   .secure(true)
+   //     .domain(env::var("COOKIE_DOMAIN").expect("未设置COOKIE_DOMAIN"))
+ //       .same_site(SameSite::Lax)
         .finish();
     Ok(output_cookie)
 }

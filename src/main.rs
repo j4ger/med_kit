@@ -57,7 +57,8 @@ fn launch_rocket() -> _ {
         .register("/api", api_error_catchers())
         //TODO:CORS
         .attach(CORS)
-        .manage(WechatAccessToken::new())
+    //TODO:Access Token
+    //.manage(WechatAccessToken::new())
 }
 
 //TODO: logging

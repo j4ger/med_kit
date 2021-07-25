@@ -8,3 +8,8 @@ CREATE TABLE products (
     current_stage STAGE NOT NULL DEFAULT 'Initialized',
     report_id uuid
 );
+
+ALTER TABLE products
+ADD CONSTRAINT match_profile_id
+FOREIGN KEY (profile_id)
+REFERENCES profiles (id);

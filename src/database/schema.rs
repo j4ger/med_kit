@@ -55,4 +55,14 @@ table! {
     }
 }
 
-allow_tables_to_appear_in_same_query!(products, profiles, reports, users,);
+joinable!(products -> profiles (profile_id));
+joinable!(products -> reports (report_id));
+joinable!(profiles -> users (user_id));
+joinable!(reports -> users (uploader_id));
+
+allow_tables_to_appear_in_same_query!(
+    products,
+    profiles,
+    reports,
+    users,
+);

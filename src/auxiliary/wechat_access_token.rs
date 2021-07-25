@@ -1,11 +1,10 @@
 use chrono::prelude::*;
 use chrono::{DateTime, Duration};
 
-use isahc::{self, get, AsyncReadResponseExt};
+use isahc::{self, AsyncReadResponseExt, ReadResponseExt};
 
-use isahc::ReadResponseExt;
 use log::error;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
 use std::env;
 

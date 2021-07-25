@@ -1,9 +1,9 @@
 use diesel::result::Error as DieselError;
 
+use rocket::http::Status;
 use rocket::request::Request;
 use rocket::response::{self, Responder, Response};
 use rocket::serde::json::Json;
-
 use serde::Serialize;
 
 use log::info;
@@ -75,16 +75,15 @@ impl<'a> Responder<'a, 'static> for GenericError {
             Self::GetWechatUserinfoError => "微信Userinfo获取失败",
         }
         .to_string();
-        Response::build_from(
-            Json(ErrorResponse {
-                success: false,
-                message: error_message,
-                error_code: None,
-            })
-            .respond_to(&req)
-            .unwrap(),
-        )
-        .ok()
+        let mut json_result = Json(ErrorResponse {
+            success: false,
+            message: error_message,
+            error_code: None,
+        })
+        .respond_to(&req)
+        .unwrap();
+        json_result.set_status(Status::InternalServerError);
+        Response::build_from(json_result).ok()
     }
 }
 
