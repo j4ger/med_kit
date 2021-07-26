@@ -1,3 +1,4 @@
+use crate::auth::UserDigest;
 use crate::auxiliary::{GenericError, GenericResult, ProductBarcode, SuccessResponse};
 use crate::database::{self, MainDatabaseConnection};
 use crate::models::*;
@@ -13,7 +14,8 @@ use rocket::serde::json::Json;
 pub async fn submit_profile(
     db: MainDatabaseConnection,
     product_barcode: ProductBarcode<'_>,
-    profile_data: Json<ClientProfileData>,
+    profile_data: Json<Profile>,
+    user_digest: UserDigest,
 ) -> GenericResult<String> {
     let barcode_input = product_barcode.inner().to_owned();
     let query_result: ProductDigest = db
@@ -36,11 +38,10 @@ pub async fn submit_profile(
     }
     let current_timestamp: NaiveDateTime = Utc::now().naive_utc();
     //TODO: form validation
-    let new_profile = NewProfileData {
-        //TODO: user_id
-        user_id: profile_data.user_id,
-        submit_time: current_timestamp,
-    };
+    let mut new_profile = profile_data.into_inner();
+    new_profile.user_id = user_digest.user_id;
+    new_profile.submit_time = current_timestamp;
+    new_profile.id = 0;
     match db
         .run(move |c| {
             diesel::insert_into(database::profiles::table)

@@ -22,6 +22,9 @@ table! {
         id -> Int4,
         user_id -> Int4,
         submit_time -> Timestamp,
+        name -> Varchar,
+        age -> Int4,
+        sample_time -> Timestamp,
     }
 }
 

@@ -9,8 +9,3 @@ CREATE TABLE users (
     phone_number INTEGER,
     sign_up_time TIMESTAMP NOT NULL 
 );
-
-ALTER TABLE profiles
-ADD CONSTRAINT match_user_id
-FOREIGN KEY (user_id)
-REFERENCES users (id);
