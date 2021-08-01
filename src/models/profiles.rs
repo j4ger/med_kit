@@ -1,26 +1,52 @@
-use std::convert::TryInto;
-
 use chrono::NaiveDateTime;
 
-use serde::{self, de, Deserialize, Deserializer, Serialize};
+use serde::{self, Deserialize, Deserializer, Serialize};
 
 use crate::database::*;
 
-#[derive(Serialize, Deserialize, Insertable, Clone, Debug, Queryable)]
-#[table_name = "profiles"]
+#[derive(Serialize, Deserialize, Clone, Debug, Queryable)]
 pub struct Profile {
-    #[serde(skip_serializing_if = "i32_equals_0")]
-    #[serde(default = "default_i32")]
     pub id: i32,
+    pub user_id: i32,
+    pub submit_time: NaiveDateTime,
+
+    name: String,
+    id_card_number: String,
+    birth_date: NaiveDateTime,
+    profession: String,
+    address: String,
+    phone: String,
+
+    sample_time: Option<NaiveDateTime>,
+}
+
+#[derive(Serialize, Deserialize, Insertable, Clone, Debug)]
+#[table_name = "profiles"]
+pub struct NewProfileData {
     #[serde(default = "default_i32")]
     pub user_id: i32,
     #[serde(default = "default_naive_date_time")]
     pub submit_time: NaiveDateTime,
 
     name: String,
-    age: i32,
+    id_card_number: String,
     #[serde(deserialize_with = "deserialize_i64_to_naive_date_time")]
-    sample_time: NaiveDateTime,
+    birth_date: NaiveDateTime,
+    profession: String,
+    address: String,
+    phone: String,
+}
+
+#[derive(Serialize, Deserialize, Insertable, Clone, Debug)]
+#[table_name = "profiles"]
+pub struct SampleTimeData {
+    #[serde(deserialize_with = "deserialize_i64_to_naive_date_time")]
+    pub sample_time: NaiveDateTime,
+}
+
+#[derive(Deserialize)]
+pub struct BindProfileData {
+    pub profile_id: i32,
 }
 
 fn default_i32() -> i32 {
@@ -29,10 +55,6 @@ fn default_i32() -> i32 {
 
 fn default_naive_date_time() -> NaiveDateTime {
     NaiveDateTime::from_timestamp(0, 0)
-}
-
-fn i32_equals_0(source: &i32) -> bool {
-    source == &0
 }
 
 fn deserialize_i64_to_naive_date_time<'de, D>(deserializer: D) -> Result<NaiveDateTime, D::Error>

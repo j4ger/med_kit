@@ -23,8 +23,12 @@ table! {
         user_id -> Int4,
         submit_time -> Timestamp,
         name -> Varchar,
-        age -> Int4,
-        sample_time -> Timestamp,
+        id_card_number -> Varchar,
+        birth_date -> Timestamp,
+        profession -> Varchar,
+        address -> Varchar,
+        phone -> Varchar,
+        sample_time -> Nullable<Timestamp>,
     }
 }
 

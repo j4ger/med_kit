@@ -14,6 +14,7 @@ use crate::{auxiliary::GenericError, database::*};
 pub enum StageEnum {
     Initialized,
     Submitted,
+    Sampled,
     Finished,
 }
 
@@ -24,6 +25,7 @@ impl<'a> FromParam<'a> for StageEnum {
         match param.to_lowercase().as_ref() {
             "initialized" => Ok(Self::Initialized),
             "submitted" => Ok(Self::Submitted),
+            "sampled" => Ok(Self::Sampled),
             "finished" => Ok(Self::Finished),
             _ => Err(GenericError::InvalidInputError),
         }
@@ -39,11 +41,6 @@ pub struct Product {
     pub init_time: NaiveDateTime,
     pub current_stage: StageEnum,
     pub report_id: Option<Uuid>,
-}
-
-#[derive(Deserialize)]
-pub struct ClientProductData {
-    pub product_barcode: String,
 }
 
 #[derive(Serialize, Deserialize, Queryable, Insertable, Clone, Debug)]
@@ -69,4 +66,13 @@ pub struct ProductDigest {
 pub struct UpdateProductAfterSubmission {
     pub profile_id: Option<i32>,
     pub current_stage: StageEnum,
+}
+
+#[derive(Serialize)]
+pub struct ProductStatistics {
+    pub total: i64,
+    pub initialized: i64,
+    pub submitted: i64,
+    pub sampled: i64,
+    pub finished: i64,
 }

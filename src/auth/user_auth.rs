@@ -1,11 +1,17 @@
 use argon2;
+
 use chrono::{prelude::*, Duration};
+
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
+
 use rocket::http::{Cookie, SameSite, Status};
 use rocket::outcome::Outcome;
 use rocket::request::{FromRequest, Request};
+
 use serde::{Deserialize, Serialize};
+
 use std::{env, fs};
+
 use time;
 
 use crate::auxiliary::GenericError;
@@ -97,10 +103,10 @@ pub fn gen_token_cookie<'a>(user_id: i32, user_role: RoleEnum) -> Result<Cookie<
     //TODO: Cookie options
     let output_cookie = Cookie::build("token", token)
         .expires(time::OffsetDateTime::now_utc() + time::Duration::weeks(1))
-       // .http_only(true)
-     //   .secure(true)
-   //     .domain(env::var("COOKIE_DOMAIN").expect("未设置COOKIE_DOMAIN"))
- //       .same_site(SameSite::Lax)
+        // .http_only(true)
+        //   .secure(true)
+        //     .domain(env::var("COOKIE_DOMAIN").expect("未设置COOKIE_DOMAIN"))
+        //       .same_site(SameSite::Lax)
         .finish();
     Ok(output_cookie)
 }

@@ -11,10 +11,10 @@ use chrono::NaiveDateTime;
 use rocket::serde::json::Json;
 
 #[post("/submit_profile/<product_barcode>", data = "<profile_data>")]
-pub async fn submit_profile(
+pub async fn submit_profile_then_update(
     db: MainDatabaseConnection,
     product_barcode: ProductBarcode<'_>,
-    profile_data: Json<Profile>,
+    profile_data: Json<NewProfileData>,
     user_digest: UserDigest,
 ) -> GenericResult<String> {
     let barcode_input = product_barcode.inner().to_owned();
@@ -41,7 +41,6 @@ pub async fn submit_profile(
     let mut new_profile = profile_data.into_inner();
     new_profile.user_id = user_digest.user_id;
     new_profile.submit_time = current_timestamp;
-    new_profile.id = 0;
     match db
         .run(move |c| {
             diesel::insert_into(database::profiles::table)
@@ -64,10 +63,97 @@ pub async fn submit_profile(
     }
 }
 
+#[post("/submit_profile", data = "<profile_data>")]
+pub async fn submit_profile(
+    db: MainDatabaseConnection,
+    user_digest: UserDigest,
+    profile_data: Json<NewProfileData>,
+) -> GenericResult<String> {
+    let current_timestamp: NaiveDateTime = Utc::now().naive_utc();
+    //TODO: form validation
+    let mut new_profile = profile_data.into_inner();
+    new_profile.user_id = user_digest.user_id;
+    new_profile.submit_time = current_timestamp;
+    match db
+        .run(move |c| {
+            diesel::insert_into(database::profiles::table)
+                .values(new_profile)
+                .execute(c)
+        })
+        .await?
+    {
+        0 => Err(GenericError::ProductReuseError),
+        _ => SuccessResponse::build("提交成功".to_string()),
+    }
+}
+
 #[get("/get_profile/<profile_id>")]
 pub async fn get_profile(db: MainDatabaseConnection, profile_id: i32) -> GenericResult<Profile> {
     let result: Profile = db
         .run(move |c| database::profiles::table.find(profile_id).get_result(c))
         .await?;
     SuccessResponse::build(result)
+}
+
+#[get("/get_profile_by_user")]
+pub async fn get_profile_by_user(
+    db: MainDatabaseConnection,
+    user_digest: UserDigest,
+) -> GenericResult<Vec<Profile>> {
+    SuccessResponse::build(
+        db.run(move |c| {
+            database::profiles::table
+                .filter(database::profiles::user_id.eq_all(user_digest.user_id))
+                .get_results(c)
+        })
+        .await?,
+    )
+}
+
+#[post("/bind_profile/<product_barcode>", data = "<bind_profile_data>")]
+pub async fn bind_profile(
+    db: MainDatabaseConnection,
+    product_barcode: ProductBarcode<'_>,
+    bind_profile_data: Json<BindProfileData>,
+    user_digest: UserDigest,
+) -> GenericResult<String> {
+    let barcode_input = product_barcode.inner().to_owned();
+    let barcode_input_clone = barcode_input.clone();
+    let profile_id = bind_profile_data.profile_id;
+    let query_result: Product = db
+        .run(move |c| {
+            database::products::table
+                .filter(database::products::product_barcode.eq_all(barcode_input))
+                .get_result(c)
+        })
+        .await?;
+    if query_result.current_stage != StageEnum::Initialized {
+        Err(GenericError::ProductReuseError)
+    } else {
+        let profile_result: Profile = db
+            .run(move |c| database::profiles::table.find(&profile_id).get_result(c))
+            .await?;
+        if !(profile_result.user_id == user_digest.user_id
+            || user_digest.user_role == RoleEnum::Admin
+            || user_digest.user_role == RoleEnum::Staff)
+        {
+            Err(GenericError::PermissionDeniedError)
+        } else {
+            match db
+                .run(move |c| {
+                    diesel::update(
+                        database::products::table.filter(
+                            database::products::product_barcode.eq_all(barcode_input_clone),
+                        ),
+                    )
+                    .set(database::products::profile_id.eq_all(Some(profile_id)))
+                    .execute(c)
+                })
+                .await?
+            {
+                1 => SuccessResponse::build("成功".to_string()),
+                _ => Err(GenericError::ServerInternalError),
+            }
+        }
+    }
 }

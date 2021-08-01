@@ -24,12 +24,12 @@ use log;
 
 use std::env;
 
-use crate::auxiliary::{WechatAccessToken, CORS};
+use crate::auxiliary::{ProductBarcodeGeneratorState, WechatAccessToken, CORS};
 use crate::database::MainDatabaseConnection;
 use crate::routes::*;
 
-#[launch]
-fn launch_rocket() -> _ {
+#[rocket::main]
+async fn main() {
     dotenv().ok();
     fern::Dispatch::new()
         .format(|out, message, record| {
@@ -48,7 +48,8 @@ fn launch_rocket() -> _ {
         )
         .apply()
         .expect("log引擎初始化错误");
-    rocket::build()
+
+    let rocket_instance = rocket::build()
         .mount("/api/user", user_routes())
         .mount("/api/product", product_routes())
         .mount("/api/profile", profile_routes())
@@ -57,9 +58,11 @@ fn launch_rocket() -> _ {
         .register("/api", api_error_catchers())
         //TODO:CORS
         .attach(CORS)
-    //TODO:Access Token
-    //.manage(WechatAccessToken::new())
-}
+        //TODO:Access Token
+        //.manage(WechatAccessToken::new())
+        .manage(ProductBarcodeGeneratorState::load());
+    rocket_instance.launch().await;
 
-//TODO: logging
-//TODO: database constrains
+    //TODO: logging
+    //TODO: database constrains
+}

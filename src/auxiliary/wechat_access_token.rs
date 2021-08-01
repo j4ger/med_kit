@@ -4,6 +4,7 @@ use chrono::{DateTime, Duration};
 use isahc::{self, AsyncReadResponseExt, ReadResponseExt};
 
 use log::error;
+use rocket::tokio::sync::RwLock;
 use serde::Deserialize;
 
 use std::env;
@@ -17,8 +18,12 @@ lazy_static! {
 }
 
 pub struct WechatAccessToken {
-    pub access_token: String,
+    access_token: String,
     expiration_time: DateTime<Utc>,
+}
+
+pub struct WechatAccessTokenState {
+    pub state: RwLock<WechatAccessToken>,
 }
 
 #[derive(Deserialize)]
@@ -27,7 +32,7 @@ struct WechatAccessTokenResponse {
     expires_in: i32,
 }
 
-impl WechatAccessToken {
+impl WechatAccessTokenState {
     pub fn new() -> Result<Self, GenericError> {
         match isahc::get(format!(
             "https://api.weixin.qq.com\
@@ -41,8 +46,10 @@ impl WechatAccessToken {
                     let expiration_time =
                         current_time + Duration::seconds((parsed_response.expires_in - 360) as i64);
                     Ok(Self {
-                        access_token: parsed_response.access_token,
-                        expiration_time,
+                        state: RwLock::new(WechatAccessToken {
+                            access_token: parsed_response.access_token,
+                            expiration_time,
+                        }),
                     })
                 }
                 Err(error) => {
@@ -57,7 +64,7 @@ impl WechatAccessToken {
         }
     }
 
-    async fn refetch(&mut self) -> Result<(), GenericError> {
+    async fn refetch(&self) -> Result<(), GenericError> {
         let parsed_response: WechatAccessTokenResponse = isahc::get_async(format!(
             "\
         https://api.weixin.qq.com/cgi-bin/token?\
@@ -80,16 +87,18 @@ impl WechatAccessToken {
         let current_time = Utc::now();
         let expiration_time =
             current_time + Duration::seconds((parsed_response.expires_in - 360) as i64);
-        self.expiration_time = expiration_time;
-        self.access_token = parsed_response.access_token;
+        let mut writer = self.state.write().await;
+        writer.expiration_time = expiration_time;
+        writer.access_token = parsed_response.access_token;
         Ok(())
     }
 
-    pub async fn get(&mut self) -> Result<String, GenericError> {
+    pub async fn get(&self) -> Result<String, GenericError> {
         let current_time = Utc::now();
-        if current_time > self.expiration_time {
+        let valid_time = self.state.read().await.expiration_time;
+        if current_time > valid_time {
             self.refetch().await?;
         }
-        Ok(self.access_token.to_owned())
+        Ok(self.state.read().await.access_token.to_owned())
     }
 }

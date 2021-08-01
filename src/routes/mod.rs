@@ -32,12 +32,21 @@ pub fn product_routes() -> Vec<Route> {
         init_product,
         get_product_digest,
         get_products,
-        get_filtered_products
+        get_filtered_products,
+        get_product,
+        get_profile_by_product,
+        submit_sample_time,
+        get_statistics
     ]
 }
 
 pub fn profile_routes() -> Vec<Route> {
-    routes![submit_profile, get_profile,]
+    routes![
+        submit_profile_then_update,
+        get_profile,
+        submit_profile,
+        get_profile_by_user
+    ]
 }
 
 pub fn report_routes() -> Vec<Route> {
@@ -47,6 +56,7 @@ pub fn report_routes() -> Vec<Route> {
         get_filtered_reports,
         remove_report,
         get_report,
+        bind_profile
     ]
 }
 

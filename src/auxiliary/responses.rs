@@ -25,6 +25,7 @@ pub enum GenericError {
     GetWechatAccessTokenError,
     GetWechatOpenIdError,
     GetWechatUserinfoError,
+    ProfileNotExistError,
 }
 
 #[derive(Serialize)]
@@ -73,6 +74,7 @@ impl<'a> Responder<'a, 'static> for GenericError {
             Self::GetWechatAccessTokenError => "微信AccessToken获取失败",
             Self::GetWechatOpenIdError => "微信OpenId获取失败",
             Self::GetWechatUserinfoError => "微信Userinfo获取失败",
+            Self::ProfileNotExistError => "档案未填写",
         }
         .to_string();
         let mut json_result = Json(ErrorResponse {

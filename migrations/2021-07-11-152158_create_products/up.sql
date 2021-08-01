@@ -1,4 +1,4 @@
-CREATE TYPE STAGE AS ENUM ('Initialized','Submitted','Finished');
+CREATE TYPE STAGE AS ENUM ('Initialized','Submitted','Sampled','Finished');
 
 CREATE TABLE products (
     id SERIAL PRIMARY KEY,

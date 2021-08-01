@@ -4,8 +4,12 @@ CREATE TABLE profiles (
   submit_time TIMESTAMP NOT NULL,
 
   name  VARCHAR NOT NULL,
-  age   INTEGER NOT NULL,
-  sample_time   TIMESTAMP NOT NULL
+  id_card_number VARCHAR NOT NULL,
+  birth_date TIMESTAMP NOT NULL,
+  profession  VARCHAR NOT NULL,
+  address VARCHAR NOT NULL,
+  phone VARCHAR NOT NULL,
+  sample_time TIMESTAMP
 );
 
 ALTER TABLE products
