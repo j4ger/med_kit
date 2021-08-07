@@ -57,7 +57,8 @@ pub fn report_routes() -> Vec<Route> {
         get_reports,
         get_filtered_reports,
         remove_report,
-        get_report
+        get_report,
+        publish_report,
     ]
 }
 

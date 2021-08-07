@@ -28,3 +28,10 @@ pub struct NewReport {
 pub struct ClientRemoveReportData {
     pub report_id: Uuid,
 }
+
+#[derive(Deserialize)]
+pub struct PublishReportData {
+    pub product_barcode: String,
+    pub filename: Option<String>,
+    pub download_url: Option<String>,
+}
