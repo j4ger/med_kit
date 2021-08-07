@@ -62,5 +62,5 @@ where
     D: Deserializer<'de>,
 {
     let parsed_integer = i64::deserialize(deserializer)?;
-    Ok(NaiveDateTime::from_timestamp(parsed_integer, 0))
+    Ok(NaiveDateTime::from_timestamp(parsed_integer / 1000, 0))
 }

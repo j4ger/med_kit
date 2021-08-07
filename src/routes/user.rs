@@ -1,5 +1,5 @@
 use crate::auth::{
-    gen_token_cookie, AdminAuth, UserDigest, USER_AUTH_ARGON2_CONFIG, USER_AUTH_SALT,
+    gen_token_cookie, AdminAuth, StaffAuth, UserDigest, USER_AUTH_ARGON2_CONFIG, USER_AUTH_SALT,
 };
 use crate::auxiliary::{GenericError, GenericResult, SuccessResponse};
 use crate::auxiliary::{WECHAT_APPID, WECHAT_APPSECRET};
@@ -345,4 +345,44 @@ pub async fn wechat_login(
             }
         }
     }
+}
+
+#[get("/get_statistics")]
+pub async fn get_user_statistics(
+    db: MainDatabaseConnection,
+    _admin: AdminAuth,
+) -> GenericResult<UserStatistics> {
+    let total = db
+        .run(|c| database::users::table.count().get_result(c))
+        .await?;
+    let admin = db
+        .run(|c| {
+            database::users::table
+                .filter(database::users::user_role.eq_all(RoleEnum::Admin))
+                .count()
+                .get_result(c)
+        })
+        .await?;
+    let user = db
+        .run(|c| {
+            database::users::table
+                .filter(database::users::user_role.eq_all(RoleEnum::User))
+                .count()
+                .get_result(c)
+        })
+        .await?;
+    let staff = db
+        .run(|c| {
+            database::users::table
+                .filter(database::users::user_role.eq_all(RoleEnum::Staff))
+                .count()
+                .get_result(c)
+        })
+        .await?;
+    SuccessResponse::build(UserStatistics {
+        total,
+        admin,
+        staff,
+        user,
+    })
 }

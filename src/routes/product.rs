@@ -222,11 +222,11 @@ pub async fn submit_sample_time(
                         })
                         .await
                     {
-                        Ok(_) => SuccessResponse::build("Ok".to_string()),
+                        Ok(_) => SuccessResponse::build("成功".to_string()),
                         Err(_) => Err(GenericError::ServerInternalError),
                     }
                 } else {
-                    SuccessResponse::build("Ok".to_string())
+                    SuccessResponse::build("成功".to_string())
                 }
             }
             Err(_) => Err(GenericError::ServerInternalError),
@@ -235,7 +235,7 @@ pub async fn submit_sample_time(
 }
 
 #[get("/get_statistics")]
-pub async fn get_statistics(
+pub async fn get_product_statistics(
     db: MainDatabaseConnection,
     _staff: StaffAuth,
 ) -> GenericResult<ProductStatistics> {

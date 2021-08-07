@@ -146,7 +146,10 @@ pub async fn bind_profile(
                             database::products::product_barcode.eq_all(barcode_input_clone),
                         ),
                     )
-                    .set(database::products::profile_id.eq_all(Some(profile_id)))
+                    .set((
+                        database::products::profile_id.eq_all(Some(profile_id)),
+                        database::products::current_stage.eq_all(StageEnum::Submitted),
+                    ))
                     .execute(c)
                 })
                 .await?

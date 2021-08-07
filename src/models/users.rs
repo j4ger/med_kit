@@ -99,3 +99,11 @@ pub struct WechatUserinfoResponse {
     privilege: Vec<String>,
     unionid: String,
 }
+
+#[derive(Serialize)]
+pub struct UserStatistics {
+    pub total: i64,
+    pub admin: i64,
+    pub staff: i64,
+    pub user: i64,
+}

@@ -23,7 +23,8 @@ pub fn user_routes() -> Vec<Route> {
         remove_user,
         logout,
         change_password,
-        wechat_login
+        wechat_login,
+        get_user_statistics
     ]
 }
 
@@ -36,7 +37,7 @@ pub fn product_routes() -> Vec<Route> {
         get_product,
         get_profile_by_product,
         submit_sample_time,
-        get_statistics
+        get_product_statistics
     ]
 }
 
@@ -45,7 +46,8 @@ pub fn profile_routes() -> Vec<Route> {
         submit_profile_then_update,
         get_profile,
         submit_profile,
-        get_profile_by_user
+        get_profile_by_user,
+        bind_profile
     ]
 }
 
@@ -55,8 +57,7 @@ pub fn report_routes() -> Vec<Route> {
         get_reports,
         get_filtered_reports,
         remove_report,
-        get_report,
-        bind_profile
+        get_report
     ]
 }
 
