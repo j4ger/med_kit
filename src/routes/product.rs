@@ -94,7 +94,7 @@ pub async fn get_product_digest(
 }
 
 #[get("/get_products/<page>/<filter>")]
-pub async fn get_products(
+pub async fn get_filtered_products(
     db: MainDatabaseConnection,
     page: i32,
     filter: StageEnum,
@@ -114,7 +114,7 @@ pub async fn get_products(
 }
 
 #[get("/get_products/<page>")]
-pub async fn get_filtered_products(
+pub async fn get_products(
     db: MainDatabaseConnection,
     page: i32,
     _staff: StaffAuth,

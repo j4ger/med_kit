@@ -54,6 +54,7 @@ async fn main() {
         .mount("/api/product", product_routes())
         .mount("/api/profile", profile_routes())
         .mount("/api/report", report_routes())
+        .mount("/api/wechat,wechat_validation", wechat_validation_routes())
         .attach(MainDatabaseConnection::fairing())
         .register("/api", api_error_catchers())
         //TODO:CORS

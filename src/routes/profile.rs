@@ -1,4 +1,4 @@
-use crate::auth::UserDigest;
+use crate::auth::{StaffAuth, UserDigest};
 use crate::auxiliary::{GenericError, GenericResult, ProductBarcode, SuccessResponse};
 use crate::database::{self, MainDatabaseConnection};
 use crate::models::*;
@@ -159,4 +159,33 @@ pub async fn bind_profile(
             }
         }
     }
+}
+
+#[get("/get_profiles/<page>")]
+pub async fn get_profiles(
+    db: MainDatabaseConnection,
+    page: i32,
+    _staff: StaffAuth,
+) -> GenericResult<Vec<Profile>> {
+    SuccessResponse::build(
+        db.run(move |c| {
+            database::profiles::table
+                .order(database::profiles::id)
+                .limit(10)
+                .offset((page * 10) as i64)
+                .get_results(c)
+        })
+        .await?,
+    )
+}
+
+#[get("/get_statistics")]
+pub async fn get_profile_statistics(
+    db: MainDatabaseConnection,
+    _staff: StaffAuth,
+) -> GenericResult<ProfileStatistics> {
+    let total = db
+        .run(|c| database::profiles::table.count().get_result(c))
+        .await?;
+    SuccessResponse::build(ProfileStatistics { total })
 }

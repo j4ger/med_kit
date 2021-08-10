@@ -64,3 +64,8 @@ where
     let parsed_integer = i64::deserialize(deserializer)?;
     Ok(NaiveDateTime::from_timestamp(parsed_integer / 1000, 0))
 }
+
+#[derive(Serialize)]
+pub struct ProfileStatistics {
+    pub total: i64,
+}

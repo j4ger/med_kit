@@ -29,7 +29,7 @@ pub async fn upload_report(
     staff: StaffAuth,
     product_barcode: ProductBarcode<'_>,
 ) -> GenericResult<String> {
-    let filename = Uuid::new_v4().to_string();
+    let filename = format!("{}.pdf", Uuid::new_v4());
     let base = env::var("REPORT_PATH").expect("未设置REPORT_PATH");
     let mut full_path = env::current_dir().expect("工作路径获取失败");
     full_path.push(base);

@@ -3,12 +3,14 @@ mod product;
 mod profile;
 mod reports;
 mod user;
+mod wechat_validation;
 
 use error_catchers::*;
 use product::*;
 use profile::*;
 use reports::*;
 use user::*;
+use wechat_validation::*;
 
 use rocket::{Catcher, Route};
 
@@ -47,7 +49,9 @@ pub fn profile_routes() -> Vec<Route> {
         get_profile,
         submit_profile,
         get_profile_by_user,
-        bind_profile
+        bind_profile,
+        get_profile_statistics,
+        get_profiles
     ]
 }
 
@@ -60,6 +64,10 @@ pub fn report_routes() -> Vec<Route> {
         get_report,
         publish_report,
     ]
+}
+
+pub fn wechat_validation_routes() -> Vec<Route> {
+    routes![]
 }
 
 pub fn api_error_catchers() -> Vec<Catcher> {
